@@ -1,0 +1,70 @@
+﻿
+[1m[46m RUN [49m[22m [36mv4.0.16 [39m[90mC:/Users/jesus.bojorquezh/Desktop/BryanDevStuff/Project/Rajma/LandingPage[39m
+
+node.exe : [31mNo 
+test files found, 
+exiting with code 1
+En línea: 1 
+Carácter: 1
++ & "C:\Program Files
+\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: ([31mNo   
+  test fi...ing w    
+ith code 1:Strin    
+g) [], RemoteExc    
+eption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+[39m
+[2mfilter: [22m[33
+msrc/lib/store/cart-s
+tore.test.ts[39m
+[2minclude: [22m[3
+3msrc/**/*.test.{ts,t
+sx}[39m
+[2mexclude:  [22m[
+33m**/node_modules/**
+[2m, 
+[22m**/.git/**[39m
+
+(node:31988) [MODULE_
+TYPELESS_PACKAGE_JSON
+] Warning: Module 
+type of file:///C:/Us
+ers/jesus.bojorquezh/
+Desktop/BryanDevStuff
+/Project/Rajma/Landin
+gPage/postcss.config.
+js?t=1766717070080 
+is not specified and 
+it doesn't parse as 
+CommonJS.
+Reparsing as ES 
+module because 
+module syntax was 
+detected. This 
+incurs a performance 
+overhead.
+To eliminate this 
+warning, add "type": 
+"module" to C:\Users\
+jesus.bojorquezh\Desk
+top\BryanDevStuff\Pro
+ject\Rajma\LandingPag
+e\package.json.
+(Use `node 
+--trace-warnings 
+...` to show where 
+the warning was 
+created)

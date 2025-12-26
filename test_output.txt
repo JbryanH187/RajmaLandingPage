@@ -1,0 +1,13 @@
+
+> temp_init@0.1.0 test
+> jest
+
+Error: Jest: Failed to parse the TypeScript config file C:\Users\jesus.bojorquezh\Desktop\BryanDevStuff\Project\Rajma\LandingPage\jest.config.ts
+  Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'C:\Users\jesus.bojorquezh\Desktop\BryanDevStuff\Project\Rajma\LandingPage\node_modules\next\jest' imported from C:\Users\jesus.bojorquezh\Desktop\BryanDevStuff\Project\Rajma\LandingPage\jest.config.ts
+Did you mean to import "next/jest.js"?
+    at readConfigFileAndSetRootDir (C:\Users\jesus.bojorquezh\Desktop\BryanDevStuff\Project\Rajma\LandingPage\node_modules\jest-config\build\index.js:2274:13)
+    at async readInitialOptions (C:\Users\jesus.bojorquezh\Desktop\BryanDevStuff\Project\Rajma\LandingPage\node_modules\jest-config\build\index.js:1147:13)
+    at async readConfig (C:\Users\jesus.bojorquezh\Desktop\BryanDevStuff\Project\Rajma\LandingPage\node_modules\jest-config\build\index.js:918:7)
+    at async readConfigs (C:\Users\jesus.bojorquezh\Desktop\BryanDevStuff\Project\Rajma\LandingPage\node_modules\jest-config\build\index.js:1168:26)
+    at async runCLI (C:\Users\jesus.bojorquezh\Desktop\BryanDevStuff\Project\Rajma\LandingPage\node_modules\@jest\core\build\index.js:1407:7)
+    at async Object.run (C:\Users\jesus.bojorquezh\Desktop\BryanDevStuff\Project\Rajma\LandingPage\node_modules\jest-cli\build\index.js:656:9)

@@ -1,0 +1,1020 @@
+﻿
+> temp_init@0.1.0 test
+> jest
+
+node.exe : FAIL src/l
+ib/store/cart-store.t
+est.ts
+En línea: 1 
+Carácter: 1
++ & "C:\Program Files
+\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (FAIL sr   
+ c/lib/store/cart    
+-store.test.ts:S    
+tring) [], Remot    
+eException
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+  ÔùÅ Test suite 
+failed to run
+
+    TypeError: (0 , m
+iddleware_1.createJSO
+NStorage) is not a 
+function
+
+    [0m [90m 75 
+|[39m         {
+     [90m 76 |[39m 
+            
+name[33m:[39m [32m
+'rajma-cart-storage'
+[39m[33m,[39m
+    [31m[1m>[22m[
+39m[90m 77 |[39m   
+          
+storage[33m:[39m 
+createJSONStorage(() 
+[33m=>[39m localSto
+rage)[33m,[39m
+     [90m    |[39m 
+                     
+                 
+[31m[1m^[22m[39m
+     [90m 78 |[39m 
+            skipHydra
+tion[33m:[39m [36m
+true[39m[33m,[39m 
+[90m// We might 
+need to handle 
+hydration manually 
+to avoid hydration 
+mismatch[39m
+     [90m 79 |[39m 
+        }
+     [90m 80 |[39m 
+    )[0m
+
+      at 
+Object.<anonymous> (s
+rc/lib/store/cart-sto
+re.ts:77:39)
+      at 
+Object.<anonymous> (s
+rc/lib/store/cart-sto
+re.test.ts:2:1)
+
+FAIL src/components/f
+eatures/cart/CartInte
+gration.test.tsx
+  ÔùÅ Test suite 
+failed to run
+
+    TypeError: (0 , m
+iddleware_1.createJSO
+NStorage) is not a 
+function
+
+    [0m [90m 75 
+|[39m         {
+     [90m 76 |[39m 
+            
+name[33m:[39m [32m
+'rajma-cart-storage'
+[39m[33m,[39m
+    [31m[1m>[22m[
+39m[90m 77 |[39m   
+          
+storage[33m:[39m 
+createJSONStorage(() 
+[33m=>[39m localSto
+rage)[33m,[39m
+     [90m    |[39m 
+                     
+                 
+[31m[1m^[22m[39m
+     [90m 78 |[39m 
+            skipHydra
+tion[33m:[39m [36m
+true[39m[33m,[39m 
+[90m// We might 
+need to handle 
+hydration manually 
+to avoid hydration 
+mismatch[39m
+     [90m 79 |[39m 
+        }
+     [90m 80 |[39m 
+    )[0m
+
+      at 
+Object.<anonymous> (s
+rc/lib/store/cart-sto
+re.ts:77:39)
+      at 
+Object.<anonymous> (s
+rc/components/feature
+s/cart/CartSheet.tsx:
+6:1)
+      at 
+Object.<anonymous> (s
+rc/components/feature
+s/cart/CartIntegratio
+n.test.tsx:2:1)
+
+FAIL src/components/f
+eatures/hero/Hero.tes
+t.tsx
+  ÔùÅ Hero Component 
+ÔÇ║ displays 
+"Cerrado" outside of 
+operating hours 
+(e.g., 2:00 PM)
+
+    TestingLibraryEle
+mentError: Unable to 
+find an element with 
+the text: 
+/Cerrado/i. This 
+could be because the 
+text is broken up by 
+multiple elements. 
+In this case, you 
+can provide a 
+function for your 
+text matcher to make 
+your matcher more 
+flexible.
+
+    Ignored nodes: 
+comments, script, 
+style
+    [36m<body>[39m
+      [36m<div>[39m
+        
+[36m<section[39m
+          [33mclass
+[39m=[32m"relative 
+h-[60vh] 
+min-h-[500px] w-full 
+overflow-hidden 
+bg-black"[39m
+        [36m>[39m
+          
+[36m<div[39m
+            [33mclas
+s[39m=[32m"absolute
+ inset-0 z-0"[39m
+          [36m>[39m
+            
+[36m<img[39m
+              [33mal
+t[39m=[32m"Rajma 
+Sushi Ambience"[39m
+              [33mcl
+ass[39m=[32m"object
+-cover 
+opacity-60"[39m
+              [33mda
+ta-nimg[39m=[32m"fi
+ll"[39m
+              [33mde
+coding[39m=[32m"asy
+nc"[39m
+              [33msi
+zes[39m=[32m"100vw"
+[39m
+              [33msr
+c[39m=[32m"/_next/i
+mage?url=%2Fhero-imag
+e.jpg&w=3840&q=75"[3
+9m
+              [33msr
+cset[39m=[32m"/_nex
+t/image?url=%2Fhero-i
+mage.jpg&w=640&q=75 
+640w, /_next/image?ur
+l=%2Fhero-image.jpg&w
+=750&q=75 750w, /_nex
+t/image?url=%2Fhero-i
+mage.jpg&w=828&q=75 
+828w, /_next/image?ur
+l=%2Fhero-image.jpg&w
+=1080&q=75 1080w, /_n
+ext/image?url=%2Fhero
+-image.jpg&w=1200&q=7
+5 1200w, /_next/image
+?url=%2Fhero-image.jp
+g&w=1920&q=75 1920w, 
+/_next/image?url=%2Fh
+ero-image.jpg&w=2048&
+q=75 2048w, /_next/im
+age?url=%2Fhero-image
+.jpg&w=3840&q=75 
+3840w"[39m
+              [33mst
+yle[39m=[32m"positi
+on: absolute; 
+height: 100%; width: 
+100%; left: 0px; 
+top: 0px; right: 
+0px; bottom: 0px; 
+color: 
+transparent;"[39m
+            
+[36m/>[39m
+            
+[36m<div[39m
+              [33mcl
+ass[39m=[32m"absolu
+te inset-0 
+bg-gradient-to-t 
+from-background 
+via-transparent 
+to-transparent"[39m
+            
+[36m/>[39m
+          
+[36m</div>[39m
+          
+[36m<div[39m
+            [33mclas
+s[39m=[32m"containe
+r relative z-10 flex 
+h-full flex-col 
+justify-end pb-12 
+text-white"[39m
+          [36m>[39m
+            
+[36m<div[39m
+              [33mst
+yle[39m=[32m"opacit
+y: 0; transform: tran
+slateY(20px);"[39m
+            
+[36m>[39m
+              
+[36m<div[39m
+                [33m
+class[39m=[32m"mb-4
+ inline-flex 
+items-center gap-2 
+rounded-full border 
+border-white/20 
+bg-black/40 px-3 
+py-1 backdrop-blur-md
+"[39m
+              
+[36m>[39m
+                
+[36m<div[39m
+                  [3
+3mclass[39m=[32m"h-
+2 w-2 rounded-full 
+animate-pulse 
+bg-destructive"[39m
+                
+[36m/>[39m
+                
+[36m<span[39m
+                  [3
+3mclass[39m=[32m"te
+xt-sm 
+font-medium"[39m
+                
+[36m>[39m
+                  
+[0mAbre a las 3:00 
+PM[0m
+                
+[36m</span>[39m
+              
+[36m</div>[39m
+              
+[36m<h1[39m
+                [33m
+class[39m=[32m"mb-2
+ text-5xl font-bold 
+tracking-tight 
+md:text-7xl"[39m
+              
+[36m>[39m
+                
+[0mRajma Sushi[0m
+              
+[36m</h1>[39m
+              
+[36m<p[39m
+                [33m
+class[39m=[32m"max-
+w-md text-xl 
+font-light 
+text-gray-200"[39m
+              
+[36m>[39m
+                
+[0mFusi├│n 
+Japonesa-Sinaloense. 
+Equilibrio, sabor y 
+tradici├│n en cada 
+rollo.[0m
+              
+[36m</p>[39m
+              
+[36m<div[39m
+                [33m
+class[39m=[32m"mt-6
+ flex flex-wrap 
+gap-4"[39m
+              
+[36m>[39m
+                
+[36m<div[39m
+                  [3
+3mclass[39m=[32m"fl
+ex items-center 
+gap-2 text-sm 
+text-gray-300"[39m
+                
+[36m>[39m
+                  
+[36m<svg[39m
+                    
+[33maria-hidden[39m=
+[32m"true"[39m
+                    
+[33mclass[39m=[32m"
+lucide lucide-clock 
+h-4 w-4 
+text-primary"[39m
+                    
+[33mfill[39m=[32m"n
+one"[39m
+                    
+[33mheight[39m=[32m
+"24"[39m
+                    
+[33mstroke[39m=[32m
+"currentColor"[39m
+                    
+[33mstroke-linecap[3
+9m=[32m"round"[39m
+                    
+[33mstroke-linejoin[
+39m=[32m"round"[39m
+                    
+[33mstroke-width[39m
+=[32m"2"[39m
+                    
+[33mviewBox[39m=[32
+m"0 0 24 24"[39m
+                    
+[33mwidth[39m=[32m"
+24"[39m
+                    
+[33mxmlns[39m=[32m"
+http://www.w3.org/200
+0/svg"[39m
+                  
+[36m>[39m
+                    
+[36m<path[39m
+                     
+ [33md[39m=[32m"M1
+2 6v6l4 2"[39m
+                    
+[36m/>[39m
+                    
+[36m<circle[39m
+                     
+ [33mcx[39m=[32m"1
+2"[39m
+                     
+ [33mcy[39m=[32m"1
+2"[39m
+                     
+ [33mr[39m=[32m"10
+"[39m
+                    
+[36m/>[39m
+                  
+[36m</svg>[39m
+                  
+[36m<span>[39m
+                    
+[0mLun-Vie 3pm - 
+11pm[0m
+                  
+[36m</span>[39m
+                
+[36m</div>[39m
+                
+[36m<div[39m
+                  [3
+3mclass[39m=[32m"fl
+ex items-center 
+gap-2 text-sm 
+text-gray-300"[39m
+                
+[36m>[39m
+                  
+[36m<svg[39m
+                    
+[33maria-hidden[39m=
+[32m"true"[39m
+                    
+[33mclass[39m=[32m"
+lucide 
+lucide-map-pin h-4 
+w-4 
+text-primary"[39m
+                    
+[33mfill[39m=[32m"n
+one"[39m
+                    
+[33mheight[39m=[32m
+"24"[39m
+                    
+[33mstroke[39m=[32m
+"currentColor"[39m
+                    
+[33mstroke-linecap[3
+9m=[32m"round"[39m
+                    
+[33mstroke-linejoin[
+39m=[32m"round"[39m
+                    
+[33mstroke-width[39m
+=[32m"2"[39m
+                    
+[33mviewBox[39m=[32
+m"0 0 24 24"[39m
+                    
+[33mwidth[39m=[32m"
+24"[39m
+                    
+[33mxmlns[39m=[32m"
+http://www.w3.org/200
+0/svg"[39m
+                  
+[36m>[39m
+                    
+[36m<path[39m
+                     
+ [33md[39m=[32m"M2
+0 10c0 4.993-5.539 
+10.193-7.399 
+11.799a1 1 0 0 
+1-1.202 0C9.539 
+20.193 4 14.993 4 
+10a8 8 0 0 1 16 
+0"[39m
+                    
+[36m/>[39m
+                    
+[36m<circle[39m
+                     
+ [33mcx[39m=[32m"1
+2"[39m
+                     
+ [33mcy[39m=[32m"1
+0"[39m
+                     
+ [33mr[39m=[32m"3"
+[39m
+                    
+[36m/>[39m
+                  
+[36m</svg>[39m
+                  
+[36m<span>[39m
+                    
+[0mCol. Las 
+C├║pias[0m
+                  
+[36m</span>[39m
+                
+[36m</div>[39m
+              
+[36m</div>[39m
+            
+[36m</div>[39m
+          
+[36m</div>[39m
+        
+[36m</section>[39m
+      
+[36m</div>[39m
+    [36m</body>[39m
+
+    [0m [90m 18 
+|[39m         render
+([33m<[39m[33mHero
+[39m [33m/[39m[33
+m>[39m)
+     [90m 19 |[39m
+    [31m[1m>[22m[
+39m[90m 20 |[39m   
+      expect(screen[
+33m.[39mgetByText([
+35m/Cerrado/i[39m))
+[33m.[39mtoBeInTheDo
+cument()
+     [90m    |[39m 
+                     
+ [31m[1m^[22m[39m
+     [90m 21 |[39m 
+        expect(screen
+[33m.[39mgetByText(
+[35m/Abre a las 
+3:00 PM/i[39m))[33m
+.[39mtoBeInTheDocume
+nt()
+     [90m 22 |[39m 
+    })
+     [90m 23 
+|[39m[0m
+
+      at Object.getEl
+ementError (node_modu
+les/@testing-library/
+dom/dist/config.js:37
+:19)
+      at node_modules
+/@testing-library/dom
+/dist/query-helpers.j
+s:76:38
+      at node_modules
+/@testing-library/dom
+/dist/query-helpers.j
+s:52:17
+      at node_modules
+/@testing-library/dom
+/dist/query-helpers.j
+s:95:19
+      at 
+Object.<anonymous> (s
+rc/components/feature
+s/hero/Hero.test.tsx:
+20:23)
+
+  ÔùÅ Hero Component 
+ÔÇ║ displays 
+"Abierto" during 
+operating hours 
+(e.g., 4:00 PM)
+
+    TestingLibraryEle
+mentError: Unable to 
+find an element with 
+the text: /Cierra a 
+las 11:00 PM/i. This 
+could be because the 
+text is broken up by 
+multiple elements. 
+In this case, you 
+can provide a 
+function for your 
+text matcher to make 
+your matcher more 
+flexible.
+
+    Ignored nodes: 
+comments, script, 
+style
+    [36m<body>[39m
+      [36m<div>[39m
+        
+[36m<section[39m
+          [33mclass
+[39m=[32m"relative 
+h-[60vh] 
+min-h-[500px] w-full 
+overflow-hidden 
+bg-black"[39m
+        [36m>[39m
+          
+[36m<div[39m
+            [33mclas
+s[39m=[32m"absolute
+ inset-0 z-0"[39m
+          [36m>[39m
+            
+[36m<img[39m
+              [33mal
+t[39m=[32m"Rajma 
+Sushi Ambience"[39m
+              [33mcl
+ass[39m=[32m"object
+-cover 
+opacity-60"[39m
+              [33mda
+ta-nimg[39m=[32m"fi
+ll"[39m
+              [33mde
+coding[39m=[32m"asy
+nc"[39m
+              [33msi
+zes[39m=[32m"100vw"
+[39m
+              [33msr
+c[39m=[32m"/_next/i
+mage?url=%2Fhero-imag
+e.jpg&w=3840&q=75"[3
+9m
+              [33msr
+cset[39m=[32m"/_nex
+t/image?url=%2Fhero-i
+mage.jpg&w=640&q=75 
+640w, /_next/image?ur
+l=%2Fhero-image.jpg&w
+=750&q=75 750w, /_nex
+t/image?url=%2Fhero-i
+mage.jpg&w=828&q=75 
+828w, /_next/image?ur
+l=%2Fhero-image.jpg&w
+=1080&q=75 1080w, /_n
+ext/image?url=%2Fhero
+-image.jpg&w=1200&q=7
+5 1200w, /_next/image
+?url=%2Fhero-image.jp
+g&w=1920&q=75 1920w, 
+/_next/image?url=%2Fh
+ero-image.jpg&w=2048&
+q=75 2048w, /_next/im
+age?url=%2Fhero-image
+.jpg&w=3840&q=75 
+3840w"[39m
+              [33mst
+yle[39m=[32m"positi
+on: absolute; 
+height: 100%; width: 
+100%; left: 0px; 
+top: 0px; right: 
+0px; bottom: 0px; 
+color: 
+transparent;"[39m
+            
+[36m/>[39m
+            
+[36m<div[39m
+              [33mcl
+ass[39m=[32m"absolu
+te inset-0 
+bg-gradient-to-t 
+from-background 
+via-transparent 
+to-transparent"[39m
+            
+[36m/>[39m
+          
+[36m</div>[39m
+          
+[36m<div[39m
+            [33mclas
+s[39m=[32m"containe
+r relative z-10 flex 
+h-full flex-col 
+justify-end pb-12 
+text-white"[39m
+          [36m>[39m
+            
+[36m<div[39m
+              [33mst
+yle[39m=[32m"opacit
+y: 0; transform: tran
+slateY(20px);"[39m
+            
+[36m>[39m
+              
+[36m<div[39m
+                [33m
+class[39m=[32m"mb-4
+ inline-flex 
+items-center gap-2 
+rounded-full border 
+border-white/20 
+bg-black/40 px-3 
+py-1 backdrop-blur-md
+"[39m
+              
+[36m>[39m
+                
+[36m<div[39m
+                  [3
+3mclass[39m=[32m"h-
+2 w-2 rounded-full 
+animate-pulse 
+bg-success"[39m
+                
+[36m/>[39m
+                
+[36m<span[39m
+                  [3
+3mclass[39m=[32m"te
+xt-sm 
+font-medium"[39m
+                
+[36m>[39m
+                  
+[0mAbierto Ahora[0m
+                
+[36m</span>[39m
+              
+[36m</div>[39m
+              
+[36m<h1[39m
+                [33m
+class[39m=[32m"mb-2
+ text-5xl font-bold 
+tracking-tight 
+md:text-7xl"[39m
+              
+[36m>[39m
+                
+[0mRajma Sushi[0m
+              
+[36m</h1>[39m
+              
+[36m<p[39m
+                [33m
+class[39m=[32m"max-
+w-md text-xl 
+font-light 
+text-gray-200"[39m
+              
+[36m>[39m
+                
+[0mFusi├│n 
+Japonesa-Sinaloense. 
+Equilibrio, sabor y 
+tradici├│n en cada 
+rollo.[0m
+              
+[36m</p>[39m
+              
+[36m<div[39m
+                [33m
+class[39m=[32m"mt-6
+ flex flex-wrap 
+gap-4"[39m
+              
+[36m>[39m
+                
+[36m<div[39m
+                  [3
+3mclass[39m=[32m"fl
+ex items-center 
+gap-2 text-sm 
+text-gray-300"[39m
+                
+[36m>[39m
+                  
+[36m<svg[39m
+                    
+[33maria-hidden[39m=
+[32m"true"[39m
+                    
+[33mclass[39m=[32m"
+lucide lucide-clock 
+h-4 w-4 
+text-primary"[39m
+                    
+[33mfill[39m=[32m"n
+one"[39m
+                    
+[33mheight[39m=[32m
+"24"[39m
+                    
+[33mstroke[39m=[32m
+"currentColor"[39m
+                    
+[33mstroke-linecap[3
+9m=[32m"round"[39m
+                    
+[33mstroke-linejoin[
+39m=[32m"round"[39m
+                    
+[33mstroke-width[39m
+=[32m"2"[39m
+                    
+[33mviewBox[39m=[32
+m"0 0 24 24"[39m
+                    
+[33mwidth[39m=[32m"
+24"[39m
+                    
+[33mxmlns[39m=[32m"
+http://www.w3.org/200
+0/svg"[39m
+                  
+[36m>[39m
+                    
+[36m<path[39m
+                     
+ [33md[39m=[32m"M1
+2 6v6l4 2"[39m
+                    
+[36m/>[39m
+                    
+[36m<circle[39m
+                     
+ [33mcx[39m=[32m"1
+2"[39m
+                     
+ [33mcy[39m=[32m"1
+2"[39m
+                     
+ [33mr[39m=[32m"10
+"[39m
+                    
+[36m/>[39m
+                  
+[36m</svg>[39m
+                  
+[36m<span>[39m
+                    
+[0mLun-Vie 3pm - 
+11pm[0m
+                  
+[36m</span>[39m
+                
+[36m</div>[39m
+                
+[36m<div[39m
+                  [3
+3mclass[39m=[32m"fl
+ex items-center 
+gap-2 text-sm 
+text-gray-300"[39m
+                
+[36m>[39m
+                  
+[36m<svg[39m
+                    
+[33maria-hidden[39m=
+[32m"true"[39m
+                    
+[33mclass[39m=[32m"
+lucide 
+lucide-map-pin h-4 
+w-4 
+text-primary"[39m
+                    
+[33mfill[39m=[32m"n
+one"[39m
+                    
+[33mheight[39m=[32m
+"24"[39m
+                    
+[33mstroke[39m=[32m
+"currentColor"[39m
+                    
+[33mstroke-linecap[3
+9m=[32m"round"[39m
+                    
+[33mstroke-linejoin[
+39m=[32m"round"[39m
+                    
+[33mstroke-width[39m
+=[32m"2"[39m
+                    
+[33mviewBox[39m=[32
+m"0 0 24 24"[39m
+                    
+[33mwidth[39m=[32m"
+24"[39m
+                    
+[33mxmlns[39m=[32m"
+http://www.w3.org/200
+0/svg"[39m
+                  
+[36m>[39m
+                    
+[36m<path[39m
+                     
+ [33md[39m=[32m"M2
+0 10c0 4.993-5.539 
+10.193-7.399 
+11.799a1 1 0 0 
+1-1.202 0C9.539 
+20.193 4 14.993 4 
+10a8 8 0 0 1 16 
+0"[39m
+                    
+[36m/>[39m
+                    
+[36m<circle[39m
+                     
+ [33mcx[39m=[32m"1
+2"[39m
+                     
+ [33mcy[39m=[32m"1
+0"[39m
+                     
+ [33mr[39m=[32m"3"
+[39m
+                    
+[36m/>[39m
+                  
+[36m</svg>[39m
+                  
+[36m<span>[39m
+                    
+[0mCol. Las 
+C├║pias[0m
+                  
+[36m</span>[39m
+                
+[36m</div>[39m
+              
+[36m</div>[39m
+            
+[36m</div>[39m
+          
+[36m</div>[39m
+        
+[36m</section>[39m
+      
+[36m</div>[39m
+    [36m</body>[39m
+
+    [0m [90m 30 
+|[39m
+     [90m 31 |[39m 
+        expect(screen
+[33m.[39mgetByText(
+[35m/Abierto/i[39m)
+)[33m.[39mtoBeInThe
+Document()
+    [31m[1m>[22m[
+39m[90m 32 |[39m   
+      expect(screen[
+33m.[39mgetByText([
+35m/Cierra a las 
+11:00 PM/i[39m))[33
+m.[39mtoBeInTheDocum
+ent()
+     [90m    |[39m 
+                     
+ [31m[1m^[22m[39m
+     [90m 33 |[39m 
+    })
+     [90m 34 |[39m
+     [90m 35 |[39m 
+    
+it([32m'displays 
+"Cerrado" on 
+weekends if closed 
+(Rajma logic: Mon-Fri
+)'[39m[33m,[39m 
+() [33m=>[39m {[0m
+
+      at Object.getEl
+ementError (node_modu
+les/@testing-library/
+dom/dist/config.js:37
+:19)
+      at node_modules
+/@testing-library/dom
+/dist/query-helpers.j
+s:76:38
+      at node_modules
+/@testing-library/dom
+/dist/query-helpers.j
+s:52:17
+      at node_modules
+/@testing-library/dom
+/dist/query-helpers.j
+s:95:19
+      at 
+Object.<anonymous> (s
+rc/components/feature
+s/hero/Hero.test.tsx:
+32:23)
+
+PASS src/components/f
+eatures/menu/MenuGrid
+.test.tsx
+
+Test Suites: 3 
+failed, 1 passed, 4 
+total
+Tests:       2 
+failed, 4 passed, 6 
+total
+Snapshots:   0 total
+Time:        12.568 s
+Ran all test suites.

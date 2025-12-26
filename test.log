@@ -1,0 +1,97 @@
+﻿
+> temp_init@0.1.0 test
+> jest
+
+node.exe : Error: 
+Jest: Failed to 
+parse the TypeScript 
+config file C:\Users\
+jesus.bojorquezh\Desk
+top\BryanDevStuff\Pro
+ject\Rajma\LandingPag
+e\jest.config.ts
+En línea: 1 
+Carácter: 1
++ & "C:\Program Files
+\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (Error:    
+ Jest: Fa...\jest    
+.config.ts:Strin    
+g) [], RemoteExc    
+eption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+  Error [ERR_MODULE_N
+OT_FOUND]: Cannot 
+find module 'C:\Users
+\jesus.bojorquezh\Des
+ktop\BryanDevStuff\Pr
+oject\Rajma\LandingPa
+ge\node_modules\next\
+jest' imported from C
+:\Users\jesus.bojorqu
+ezh\Desktop\BryanDevS
+tuff\Project\Rajma\La
+ndingPage\jest.config
+.ts
+Did you mean to 
+import 
+"next/jest.js"?
+    at readConfigFile
+AndSetRootDir (C:\Use
+rs\jesus.bojorquezh\D
+esktop\BryanDevStuff\
+Project\Rajma\Landing
+Page\node_modules\jes
+t-config\build\index.
+js:2274:13)
+    at async 
+readInitialOptions (C
+:\Users\jesus.bojorqu
+ezh\Desktop\BryanDevS
+tuff\Project\Rajma\La
+ndingPage\node_module
+s\jest-config\build\i
+ndex.js:1147:13)
+    at async 
+readConfig (C:\Users\
+jesus.bojorquezh\Desk
+top\BryanDevStuff\Pro
+ject\Rajma\LandingPag
+e\node_modules\jest-c
+onfig\build\index.js:
+918:7)
+    at async 
+readConfigs (C:\Users
+\jesus.bojorquezh\Des
+ktop\BryanDevStuff\Pr
+oject\Rajma\LandingPa
+ge\node_modules\jest-
+config\build\index.js
+:1168:26)
+    at async runCLI (
+C:\Users\jesus.bojorq
+uezh\Desktop\BryanDev
+Stuff\Project\Rajma\L
+andingPage\node_modul
+es\@jest\core\build\i
+ndex.js:1407:7)
+    at async 
+Object.run (C:\Users\
+jesus.bojorquezh\Desk
+top\BryanDevStuff\Pro
+ject\Rajma\LandingPag
+e\node_modules\jest-c
+li\build\index.js:656
+:9)
