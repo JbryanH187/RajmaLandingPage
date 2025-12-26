@@ -13,6 +13,9 @@ interface CartState {
     clearCart: () => void;
     getCartTotal: () => number;
     getItemCount: () => number;
+    isTicketOpen: boolean;
+    openTicket: () => void;
+    closeTicket: () => void;
 }
 
 // Create store with conditional persistence (only in browser)
@@ -70,7 +73,10 @@ const createStore = () => {
         },
         getItemCount: () => {
             return get().items.reduce((count: number, item: CartItem) => count + item.quantity, 0);
-        }
+        },
+        isTicketOpen: false,
+        openTicket: () => set(() => ({ isTicketOpen: true })),
+        closeTicket: () => set(() => ({ isTicketOpen: false })),
     });
 
     // Only use persist in browser environment
@@ -79,6 +85,7 @@ const createStore = () => {
             persist(storeLogic, {
                 name: 'rajma-cart-storage',
                 skipHydration: true,
+                partialize: (state) => ({ items: state.items }), // Only persist items, not UI state
             })
         );
     }

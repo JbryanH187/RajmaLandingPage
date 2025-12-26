@@ -12,36 +12,28 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 
 export function CartSheet() {
-    const { items, removeItem, updateQuantity, getCartTotal, getItemCount } = useCartStore()
+    const [isOpen, setIsOpen] = React.useState(false)
+    const { items, removeItem, updateQuantity, getCartTotal, getItemCount, openTicket, clearCart } = useCartStore()
+    const { user, openAuthModal } = useAuthStore()
     const itemCount = getItemCount()
     const total = getCartTotal()
 
     const handleCheckout = () => {
-        // Generate WhatsApp Message
-        // Brand: Rajma Sushi
-        // Format:
-        // "Hola Rajma! 🍱 Pedido:
-        // - 1x Tostada Atún ($70)
-        // - ...
-        // Total: $450
-        // 📍 [Ubicación/Notas]"
-
+        // Generate WhatsApp Message (preserved for logic, but not redirecting now)
         let message = `*Hola Rajma! 🍱 Quiero hacer un pedido:*\n\n`
         items.forEach(item => {
-            const variantText = item.selectedVariantId ? ` (${item.variants?.find(v => v.id === item.selectedVariantId)?.name})` : ""
-            const notesText = item.notes ? `\n   _Nota: ${item.notes}_` : ""
-            message += `- ${item.quantity}x ${item.name}${variantText} - ${formatCurrency(item.price * item.quantity)}${notesText}\n`
+            message += `- ${item.quantity}x ${item.name}\n`
         })
 
-        message += `\n*Total: ${formatCurrency(total)}*`
-        message += `\n\n📍 _Dirección del cliente:_` // Placeholder for user to fill
-
         const encodedMessage = encodeURIComponent(message)
-        window.open(`https://wa.me/5216672733603?text=${encodedMessage}`, '_blank')
+        // window.open(...) 
+
+        setIsOpen(false) // Close Cart Sheet
+        openTicket()     // Open Ticket
     }
 
     return (
-        <Sheet>
+        <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
                 <Button
                     className={cn(
@@ -79,7 +71,7 @@ export function CartSheet() {
                         Tu Pedido
                     </SheetTitle>
                     <SheetDescription>
-                        Revisa tus platillos antes de enviar el pedido a WhatsApp.
+                        Revisa tus platillos antes de realizar tu pedido.
                     </SheetDescription>
                 </SheetHeader>
 
@@ -151,17 +143,30 @@ export function CartSheet() {
                             <span>Total</span>
                             <span>{formatCurrency(total)}</span>
                         </div>
-                        <Button
-                            className="w-full h-14 rounded-xl text-lg font-bold shadow-lg shadow-success/20 bg-success hover:bg-success/90 text-white"
-                            disabled={items.length === 0}
-                            onClick={handleCheckout}
-                        >
-                            <Phone className="mr-2 h-5 w-5" />
-                            Pedir por WhatsApp
-                        </Button>
+
+                        {user ? (
+                            <Button
+                                className="w-full h-14 rounded-xl text-lg font-bold shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-white"
+                                disabled={items.length === 0}
+                                onClick={handleCheckout}
+                            >
+                                Realizar Pedido
+                            </Button>
+                        ) : (
+                            <Button
+                                className="w-full h-14 rounded-xl text-lg font-bold bg-primary hover:bg-primary/90 text-white"
+                                disabled={items.length === 0}
+                                onClick={openAuthModal}
+                            >
+                                Iniciar Sesión para Pedir
+                            </Button>
+                        )}
                     </div>
                 </SheetFooter>
             </SheetContent>
         </Sheet>
     )
 }
+
+import { useAuthStore } from "@/lib/store/auth-store"
+

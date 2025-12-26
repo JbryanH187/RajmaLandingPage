@@ -13,7 +13,7 @@ interface CategoryNavProps {
 
 export function CategoryNav({ categories, activeCategory, onSelectCategory }: CategoryNavProps) {
     return (
-        <nav className="flex justify-center">
+        <nav className="flex justify-center py-8">
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                 {categories.map((category) => (
                     <button

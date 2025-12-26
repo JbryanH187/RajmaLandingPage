@@ -59,43 +59,96 @@ export function FloatingNavbar() {
 
                 {/* Nav Links (Desktop) */}
                 <nav className="hidden md:flex items-center gap-6">
-                    {["Menú", "Nosotros", "Ubicación"].map((item) => (
-                        <a
-                            key={item}
-                            href={`#${item.toLowerCase()}`}
-                            className={cn(
-                                "text-sm font-medium transition-colors hover:opacity-100",
-                                scrolled ? "text-foreground/70 hover:text-foreground" : "text-white/80 hover:text-white"
-                            )}
-                        >
-                            {item}
-                        </a>
-                    ))}
+                    {["Menú", "Nosotros", "Ubicación"].map((item) => {
+                        const scrollToId = item.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                        return (
+                            <a
+                                key={item}
+                                href={`#${scrollToId}`}
+                                className={cn(
+                                    "text-sm font-medium transition-colors hover:opacity-100",
+                                    scrolled ? "text-foreground/70 hover:text-foreground" : "text-white/80 hover:text-white"
+                                )}
+                                onClick={(e) => {
+                                    e.preventDefault()
+                                    const element = document.getElementById(scrollToId)
+                                    element?.scrollIntoView({ behavior: "smooth" })
+                                }}
+                            >
+                                {item}
+                            </a>
+                        )
+                    })}
                 </nav>
 
                 {/* Right Action (Cart or CTA) */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                     <button
                         className={cn(
-                            "p-2 rounded-full transition-colors",
+                            "p-2 rounded-full transition-colors relative",
                             scrolled ? "hover:bg-black/5 text-foreground" : "hover:bg-white/10 text-white"
                         )}
                     >
                         <ShoppingBag className="h-5 w-5" />
                     </button>
-                    <a
-                        href="#menu"
-                        className={cn(
-                            "px-4 py-1.5 rounded-full text-xs font-semibold transition-all",
-                            scrolled
-                                ? "bg-foreground text-background hover:bg-foreground/90"
-                                : "bg-white text-black hover:bg-white/90"
-                        )}
-                    >
-                        Ordenar
-                    </a>
+
+                    <AuthButton scrolled={scrolled} />
                 </div>
             </div>
         </motion.header>
     )
 }
+
+import { User } from "lucide-react"
+import { useAuthStore } from "@/lib/store/auth-store"
+import { useAuth } from "@/lib/hooks/use-auth"
+
+function AuthButton({ scrolled }: { scrolled: boolean }) {
+    const { user, openAuthModal } = useAuthStore()
+    const { signOut } = useAuth()
+
+    if (user) {
+        const isAdmin = user.role === 'admin' || user.role === 'super_admin'
+
+        return (
+            <div className="flex items-center gap-2">
+                {isAdmin && (
+                    <Link
+                        href="/admin"
+                        className={cn(
+                            "px-3 py-1 rounded-full text-xs font-bold transition-colors mr-2",
+                            scrolled
+                                ? "bg-primary text-white hover:bg-primary/90"
+                                : "bg-white/20 text-white hover:bg-white/30 backdrop-blur-md"
+                        )}
+                    >
+                        Dashboard
+                    </Link>
+                )}
+                {user.avatar_url ? (
+                    <img src={user.avatar_url} alt={user.full_name || "User"} className="w-8 h-8 rounded-full border border-border" />
+                ) : (
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 text-primary font-medium text-xs">
+                        {user.email?.slice(0, 2).toUpperCase()}
+                    </div>
+                )}
+            </div>
+        )
+    }
+
+    return (
+        <button
+            onClick={openAuthModal}
+            className={cn(
+                "flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold transition-all",
+                scrolled
+                    ? "bg-foreground text-background hover:bg-foreground/90"
+                    : "bg-white text-black hover:bg-white/90"
+            )}
+        >
+            <User className="w-3 h-3" />
+            <span>Login</span>
+        </button>
+    )
+}
+
