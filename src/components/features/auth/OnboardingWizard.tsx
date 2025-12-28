@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { supabase } from "@/lib/supabase"
 import { Loader2 } from "lucide-react"
+import { profileService } from "@/lib/services/profile-service"
 
 export function OnboardingWizard() {
     const { needsOnboarding, missingFields } = useUserOnboarding()
@@ -36,23 +37,20 @@ export function OnboardingWizard() {
         }
 
         // Otherwise submit
-        setLoading(true)
-        if (!supabase) return
+        try {
+            await profileService.updateMyProfile({
+                phone: formData.phone,
+                default_address: formData.default_address
+            })
 
-        const updates = {
-            id: user.id,
-            updated_at: new Date(),
-            ...formData
-        }
-
-        const { error } = await supabase.from('profiles').upsert(updates)
-
-        if (!error) {
             // Update local state
             setUser({
                 ...user,
                 ...formData
             })
+        } catch (error) {
+            console.error(error)
+            // You might want to show a toast here
         }
         setLoading(false)
     }

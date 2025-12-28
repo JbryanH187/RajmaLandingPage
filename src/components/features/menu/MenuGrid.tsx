@@ -2,11 +2,12 @@
 
 import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Search, X } from "lucide-react"
+import { Search, X, Loader2 } from "lucide-react"
 
-import { Product } from "@/types"
-import { CATEGORIES, PRODUCTS } from "@/lib/data"
+import { Product } from "@/types/product"
+import { useMenu } from "@/lib/hooks/useMenu"
 import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
 import { ScrollReveal } from "@/components/ui/scroll-reveal"
 import { CategoryNav } from "./CategoryNav"
 import { ProductCard } from "./ProductCard"
@@ -14,10 +15,20 @@ import { ProductModal } from "./ProductModal"
 import { cn } from "@/lib/utils"
 
 export function MenuGrid() {
-    const [activeCategory, setActiveCategory] = React.useState<string>(CATEGORIES[0].id)
+    const { categories, products, loading, error } = useMenu()
+
+    // Initialize activeCategory when categories are loaded
+    const [activeCategory, setActiveCategory] = React.useState<string>("")
     const [searchQuery, setSearchQuery] = React.useState("")
     const [selectedProduct, setSelectedProduct] = React.useState<Product | null>(null)
     const [isModalOpen, setIsModalOpen] = React.useState(false)
+
+    // Set default category when data loads
+    React.useEffect(() => {
+        if (categories.length > 0 && !activeCategory) {
+            setActiveCategory(categories[0].id)
+        }
+    }, [categories, activeCategory])
 
     const handleProductSelect = (product: Product) => {
         setSelectedProduct(product)
@@ -26,7 +37,9 @@ export function MenuGrid() {
 
     // Filter Logic
     const filteredProducts = React.useMemo(() => {
-        let filtered = PRODUCTS;
+        if (!products.length) return [];
+
+        let filtered = products;
 
         if (searchQuery.trim()) {
             const query = searchQuery.toLowerCase();
@@ -36,18 +49,73 @@ export function MenuGrid() {
                 p.tags?.some(t => t.includes(query))
             );
         } else {
-            filtered = filtered.filter(p => p.category === activeCategory);
+            // Only filter by category if we have an active category and no search query
+            if (activeCategory) {
+                filtered = filtered.filter(p => p.category === activeCategory);
+            }
         }
 
         return filtered;
-    }, [searchQuery, activeCategory]);
+    }, [searchQuery, activeCategory, products]);
 
     const handleCategorySelect = (id: string) => {
         setActiveCategory(id);
         setSearchQuery("");
     };
 
-    const activeLabel = CATEGORIES.find(c => c.id === activeCategory)?.label || "";
+    const activeLabel = categories.find(c => c.id === activeCategory)?.label || "";
+
+    if (error) {
+        return (
+            <div className="flex flex-col items-center justify-center py-32 text-center">
+                <span className="text-6xl mb-6 grayscale">🧑‍🍳</span>
+                <h3 className="text-2xl font-serif text-foreground mb-2">
+                    Estamos mejorando nuestro menú
+                </h3>
+                <p className="text-muted-foreground max-w-md mx-auto">
+                    El menú no está disponible en este momento, estamos trabajando para brindarte el mejor servicio. Por favor vuelve en unos minutos.
+                </p>
+            </div>
+        )
+    }
+
+    // Skeleton Loading State
+    if (loading) {
+        return (
+            <section className="py-24 bg-background min-h-screen">
+                <div className="container px-4 md:px-8">
+                    {/* Header Skeleton */}
+                    <div className="flex flex-col items-center mb-16 space-y-4">
+                        <Skeleton className="h-16 w-48 rounded-lg" />
+                        <Skeleton className="h-6 w-96 max-w-full rounded-md" />
+                    </div>
+
+                    {/* Filter & Search Skeleton */}
+                    <div className="max-w-xl mx-auto mb-16 space-y-8">
+                        <Skeleton className="h-14 w-full rounded-full" />
+                        <div className="flex justify-center gap-2 overflow-hidden">
+                            {[1, 2, 3, 4, 5].map((i) => (
+                                <Skeleton key={i} className="h-10 w-24 rounded-full flex-shrink-0" />
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Grid Skeleton */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                            <div key={i} className="space-y-3">
+                                <Skeleton className="h-48 w-full rounded-xl" />
+                                <div className="space-y-2">
+                                    <Skeleton className="h-4 w-3/4" />
+                                    <Skeleton className="h-4 w-1/4" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+        )
+    }
 
     return (
         <section className="py-24 bg-background min-h-screen" id="menu">
@@ -85,7 +153,7 @@ export function MenuGrid() {
 
                     {/* Categories */}
                     <CategoryNav
-                        categories={CATEGORIES}
+                        categories={categories}
                         activeCategory={searchQuery ? "" : activeCategory}
                         onSelectCategory={handleCategorySelect}
                     />

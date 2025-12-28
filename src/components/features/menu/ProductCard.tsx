@@ -4,7 +4,7 @@ import * as React from "react"
 import { motion } from "framer-motion"
 import { Plus } from "lucide-react"
 
-import { Product } from "@/types"
+import { Product } from "@/types/product"
 import { formatCurrency, cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"

@@ -83,14 +83,7 @@ export function FloatingNavbar() {
 
                 {/* Right Action (Cart or CTA) */}
                 <div className="flex items-center gap-3">
-                    <button
-                        className={cn(
-                            "p-2 rounded-full transition-colors relative",
-                            scrolled ? "hover:bg-black/5 text-foreground" : "hover:bg-white/10 text-white"
-                        )}
-                    >
-                        <ShoppingBag className="h-5 w-5" />
-                    </button>
+
 
                     <AuthButton scrolled={scrolled} />
                 </div>
@@ -125,13 +118,15 @@ function AuthButton({ scrolled }: { scrolled: boolean }) {
                         Dashboard
                     </Link>
                 )}
-                {user.avatar_url ? (
-                    <img src={user.avatar_url} alt={user.full_name || "User"} className="w-8 h-8 rounded-full border border-border" />
-                ) : (
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 text-primary font-medium text-xs">
-                        {user.email?.slice(0, 2).toUpperCase()}
-                    </div>
-                )}
+                <Link href="/profile" className="hover:opacity-80 transition-opacity">
+                    {user.avatar_url ? (
+                        <img src={user.avatar_url} alt={user.full_name || "User"} className="w-8 h-8 rounded-full border border-border" />
+                    ) : (
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 text-primary font-medium text-xs">
+                            {user.email?.slice(0, 2).toUpperCase()}
+                        </div>
+                    )}
+                </Link>
             </div>
         )
     }

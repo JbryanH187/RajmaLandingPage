@@ -10,13 +10,21 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescri
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
+import { GuestWarningModal } from "./GuestWarningModal"
+
+import { usePathname } from "next/navigation"
 
 export function CartSheet() {
+    const pathname = usePathname()
     const [isOpen, setIsOpen] = React.useState(false)
+    const [showGuestModal, setShowGuestModal] = React.useState(false) // NEW
+
     const { items, removeItem, updateQuantity, getCartTotal, getItemCount, openTicket, clearCart } = useCartStore()
     const { user, openAuthModal } = useAuthStore()
     const itemCount = getItemCount()
     const total = getCartTotal()
+
+    if (pathname?.startsWith('/admin')) return null
 
     const handleCheckout = () => {
         // Generate WhatsApp Message (preserved for logic, but not redirecting now)
@@ -32,37 +40,16 @@ export function CartSheet() {
         openTicket()     // Open Ticket
     }
 
+    const handleConfirmGuest = () => {
+        setShowGuestModal(false)
+        setIsOpen(false) // Close Cart Sheet
+        openTicket()     // Open Ticket directly
+    }
+
     return (
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
-                <Button
-                    className={cn(
-                        "fixed bottom-6 right-6 h-16 w-16 rounded-full bg-primary hover:bg-primary/90 z-50 transition-all duration-300 active:scale-95",
-                        itemCount > 0 && "pulse-glow"
-                    )}
-                    style={{
-                        boxShadow: itemCount > 0
-                            ? '0 8px 32px rgba(255, 59, 48, 0.4), 0 4px 12px rgba(0,0,0,0.15)'
-                            : 'var(--shadow-float)'
-                    }}
-                >
-                    <ShoppingBag className="h-6 w-6" />
-
-                    {/* Badge - Notification Style */}
-                    <AnimatePresence>
-                        {itemCount > 0 && (
-                            <motion.span
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                exit={{ scale: 0 }}
-                                className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-white shadow-md border-2 border-background"
-                            >
-                                {itemCount}
-                            </motion.span>
-                        )}
-                    </AnimatePresence>
-                    <span className="sr-only">Ver Carrito</span>
-                </Button>
+                <div className="hidden" />
             </SheetTrigger>
             <SheetContent className="flex flex-col w-full sm:max-w-md rounded-l-[24px] border-l-0 shadow-2xl">
                 <SheetHeader>
@@ -153,17 +140,37 @@ export function CartSheet() {
                                 Realizar Pedido
                             </Button>
                         ) : (
-                            <Button
-                                className="w-full h-14 rounded-xl text-lg font-bold bg-primary hover:bg-primary/90 text-white"
-                                disabled={items.length === 0}
-                                onClick={openAuthModal}
-                            >
-                                Iniciar Sesión para Pedir
-                            </Button>
+                            <div className="space-y-3">
+                                <Button
+                                    className="w-full h-14 rounded-xl text-lg font-bold bg-primary hover:bg-primary/90 text-white"
+                                    disabled={items.length === 0}
+                                    onClick={() => {
+                                        setIsOpen(false)
+                                        openAuthModal()
+                                    }}
+                                >
+                                    Iniciar Sesión para Pedir
+                                </Button>
+                                <button
+                                    onClick={() => setShowGuestModal(true)}
+                                    className="w-full text-sm text-muted-foreground hover:text-black underline underline-offset-4 transition-colors p-2"
+                                >
+                                    Continuar como invitado
+                                </button>
+                            </div>
                         )}
                     </div>
                 </SheetFooter>
             </SheetContent>
+            <GuestWarningModal
+                isOpen={showGuestModal}
+                onClose={() => setShowGuestModal(false)}
+                onConfirmGuest={handleConfirmGuest}
+                onLogin={() => {
+                    setShowGuestModal(false)
+                    openAuthModal()
+                }}
+            />
         </Sheet>
     )
 }

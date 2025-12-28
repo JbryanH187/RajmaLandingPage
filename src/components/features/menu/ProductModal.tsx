@@ -4,7 +4,7 @@ import * as React from "react"
 import Image from "next/image"
 import { Minus, Plus, ShoppingBag, X } from "lucide-react"
 
-import { Product } from "@/types"
+import { Product } from "@/types/product"
 import { useCartStore } from "@/lib/store/cart-store"
 import { formatCurrency } from "@/lib/utils"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
@@ -52,7 +52,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden gap-0 border-0 rounded-[24px] bg-card shadow-2xl">
+            <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden gap-0 border-0 rounded-[24px] bg-card shadow-2xl [&>button]:hidden">
                 {/* Cover Image */}
                 <div className="relative aspect-[16/10] w-full bg-secondary/10">
                     {product.image ? (
