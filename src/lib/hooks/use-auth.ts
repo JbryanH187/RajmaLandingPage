@@ -4,7 +4,7 @@ import { useAuthStore } from '@/lib/store/auth-store'
 import { supabase } from '@/lib/supabase'
 
 export function useAuth() {
-    const { setUser, setLoading } = useAuthStore()
+    const { user, isLoading, setUser, setLoading } = useAuthStore()
 
     useEffect(() => {
         if (!supabase) return;
@@ -59,7 +59,12 @@ export function useAuth() {
 
     const signInWithGoogle = async () => {
         if (!supabase) return;
-        await supabase.auth.signInWithOAuth({ provider: 'google' })
+        await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: `${window.location.origin}/auth/callback`
+            }
+        })
     }
 
     const signOut = async () => {
@@ -81,5 +86,36 @@ export function useAuth() {
         setLoading(false)
     }
 
-    return { signInWithGoogle, signOut, signInAsAdminDemo }
+    const signInWithEmail = async (email: string, password: string) => {
+        if (!supabase) return;
+        const { error } = await supabase.auth.signInWithPassword({
+            email,
+            password
+        })
+        if (error) throw error
+    }
+
+    const signUpWithEmail = async (email: string, password: string, fullName: string) => {
+        if (!supabase) return;
+        const { error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: {
+                    full_name: fullName
+                }
+            }
+        })
+        if (error) throw error
+    }
+
+    return {
+        user,
+        loading: isLoading,
+        signInWithGoogle,
+        signInWithEmail,
+        signUpWithEmail,
+        signOut,
+        signInAsAdminDemo
+    }
 }
