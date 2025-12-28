@@ -5,17 +5,40 @@ import { CartItem, Product } from '@/types';
 // Check if we're in a browser environment
 const isBrowser = typeof window !== 'undefined';
 
+interface GuestOrder {
+    name: string;
+    address: string;
+    items: CartItem[];
+    total: number;
+    date: string;
+    orderType: 'delivery' | 'pickup';
+    email?: string;
+    phone?: string;
+    orderId?: string;       // For tracking
+    orderNumber?: string;   // For display
+}
+
+
 interface CartState {
     items: CartItem[];
     addItem: (product: Product, quantity: number, variantId?: string, notes?: string) => void;
     removeItem: (cartId: string) => void;
     updateQuantity: (cartId: string, quantity: number) => void;
+    setItems: (items: CartItem[]) => void;
     clearCart: () => void;
     getCartTotal: () => number;
     getItemCount: () => number;
     isTicketOpen: boolean;
     openTicket: () => void;
     closeTicket: () => void;
+
+    // Guest & Persistent State
+    guestOrder: GuestOrder | null;
+    setGuestOrder: (order: GuestOrder | null) => void;
+    ticketStatus: 'review' | 'processing' | 'receipt';
+    setTicketStatus: (status: 'review' | 'processing' | 'receipt') => void;
+    orderType: 'delivery' | 'pickup';
+    setOrderType: (type: 'delivery' | 'pickup') => void;
 }
 
 // Create store with conditional persistence (only in browser)
@@ -35,7 +58,7 @@ const createStore = () => {
                     return {
                         items: state.items.map((item) =>
                             item.cartId === uniqueKey
-                                ? { ...item, quantity: item.quantity + quantity }
+                                ? { ...item, quantity: item.quantity + quantity, subtotal: (item.quantity + quantity) * item.price }
                                 : item
                         ),
                     };
@@ -47,10 +70,14 @@ const createStore = () => {
                     quantity,
                     selectedVariantId: variantId,
                     price: price,
+                    subtotal: price * quantity,
                     notes,
                 };
 
-                return { items: [...state.items, newItem] };
+                return {
+                    items: [...state.items, newItem],
+                    ticketStatus: 'review' // Start fresh for new items
+                };
             });
         },
         removeItem: (cartId: string) => {
@@ -62,7 +89,7 @@ const createStore = () => {
             set((state: CartState) => ({
                 items: state.items.map((item) =>
                     item.cartId === cartId
-                        ? { ...item, quantity: Math.max(1, quantity) }
+                        ? { ...item, quantity: Math.max(1, quantity), subtotal: Math.max(1, quantity) * item.price }
                         : item
                 ),
             }));
@@ -77,6 +104,23 @@ const createStore = () => {
         isTicketOpen: false,
         openTicket: () => set(() => ({ isTicketOpen: true })),
         closeTicket: () => set(() => ({ isTicketOpen: false })),
+
+        // Batch update for re-ordering
+        setItems: (newItems: CartItem[]) => set(() => ({
+            items: newItems,
+            ticketStatus: 'review',
+            isTicketOpen: true
+        })),
+
+        // Guest & Persistent State Implementation
+        guestOrder: null as GuestOrder | null,
+        setGuestOrder: (order: GuestOrder | null) => set(() => ({ guestOrder: order })),
+        ticketStatus: 'review' as 'review' | 'processing' | 'receipt',
+        setTicketStatus: (status: 'review' | 'processing' | 'receipt') => set(() => ({ ticketStatus: status })),
+
+        // Order Type (Pickup vs Delivery)
+        orderType: 'delivery' as 'delivery' | 'pickup',
+        setOrderType: (type: 'delivery' | 'pickup') => set(() => ({ orderType: type })),
     });
 
     // Only use persist in browser environment
@@ -84,8 +128,13 @@ const createStore = () => {
         return create<CartState>()(
             persist(storeLogic, {
                 name: 'rajma-cart-storage',
-                skipHydration: true,
-                partialize: (state) => ({ items: state.items }), // Only persist items, not UI state
+                skipHydration: false, // Fix page reload bug
+                partialize: (state) => ({
+                    items: state.items,
+                    guestOrder: state.guestOrder, // Persist guest order
+                    ticketStatus: state.ticketStatus, // Persist status to return to 'receipt'
+                    orderType: state.orderType
+                }),
             })
         );
     }

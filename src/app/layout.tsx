@@ -1,6 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
+import { ActiveOrderButton } from "@/components/features/cart/ActiveOrderButton";
+import { Toaster } from "sonner";
+import { CartSheet } from "@/components/features/cart/CartSheet";
+import { OrderTicket } from "@/components/features/cart/OrderTicket";
+import { AuthModal } from "@/components/features/auth/AuthModal";
+import { OnboardingWizard } from "@/components/features/auth/OnboardingWizard";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -41,9 +47,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className="scroll-smooth">
+    <html lang="es" className="scroll-smooth" suppressHydrationWarning>
       <body className={`${inter.variable} ${playfair.variable} antialiased bg-background text-foreground min-h-screen font-sans`}>
         {children}
+        <ActiveOrderButton />
+        <Toaster position="top-center" richColors />
+        <div className="z-[60] relative">
+          <OrderTicket />
+        </div>
+        <CartSheet />
+        <AuthModal />
+        <OnboardingWizard />
       </body>
     </html>
   );
