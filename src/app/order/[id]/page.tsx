@@ -25,8 +25,8 @@ export default function OrderTrackerPage() {
 
             const result = await OrderService.getPublicOrder(orderId)
 
-            if (result && result.success) {
-                setOrder(result.order)
+            if (result && (result as any).success) {
+                setOrder((result as any).order)
                 setLoading(false)
             } else {
                 // If it fails on first load, set error.
