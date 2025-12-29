@@ -13,16 +13,16 @@ export function useMenu() {
         async function fetchMenu() {
             try {
                 // Obtener categorías
-                const { data: categoriesData, error: catError } = await supabase
-                    .from('categories')
+                const { data: categoriesData, error: catError } = await (supabase
+                    .from('categories') as any)
                     .select('*')
                     .order('sort_order')
 
                 if (catError) throw catError
 
                 // Obtener productos con variantes
-                const { data: productsData, error: prodError } = await supabase
-                    .from('products')
+                const { data: productsData, error: prodError } = await (supabase
+                    .from('products') as any)
                     .select(`
             *,
             product_variants (*)
@@ -33,7 +33,7 @@ export function useMenu() {
                 if (prodError) throw prodError
 
                 // Transformar datos al formato esperado
-                const transformedCategories: Category[] = (categoriesData || []).map(cat => ({
+                const transformedCategories: Category[] = (categoriesData || []).map((cat: any) => ({
                     id: cat.id,
                     label: cat.label
                 }))
@@ -41,7 +41,7 @@ export function useMenu() {
                 // We need to typecase productsData because Supabase types with joins can be tricky to infer automatically
                 const rawProducts = productsData as any[]
 
-                const transformedProducts: Product[] = (rawProducts || []).map(product => ({
+                const transformedProducts: Product[] = (rawProducts || []).map((product: any) => ({
                     id: product.id,
                     name: product.name,
                     description: product.description || undefined,

@@ -11,8 +11,8 @@ export function useAuth() {
 
         const fetchProfile = async (sessionUser: any) => {
             if (!supabase) return;
-            const { data: profile } = await supabase
-                .from('profiles')
+            const { data: profile } = await (supabase
+                .from('profiles') as any)
                 .select('*')
                 .eq('id', sessionUser.id)
                 .single()

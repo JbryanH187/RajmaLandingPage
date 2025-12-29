@@ -1,6 +1,6 @@
 
 import { useAuthStore } from '@/lib/store/auth-store'
-import { OnboardingStatus, Profile } from '@/types/auth.types'
+import { OnboardingStatus, Profile } from '@/types/auth'
 
 export function useUserOnboarding(): OnboardingStatus {
     const { user } = useAuthStore()
@@ -9,7 +9,7 @@ export function useUserOnboarding(): OnboardingStatus {
         return { needsOnboarding: false, missingFields: [] }
     }
 
-    const missingFields: string[] = []
+    const missingFields: Array<keyof Profile> = []
 
     if (!user.phone) {
         missingFields.push('phone')

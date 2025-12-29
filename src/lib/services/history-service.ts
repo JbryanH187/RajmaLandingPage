@@ -52,7 +52,7 @@ export const HistoryService = {
 
             // If we have an email but no valid userId (e.g. Demo or Guest), use the email-specific function
             if (!safeUserId && params.email) {
-                const response = await supabase.rpc('get_orders_by_email', {
+                const response = await (supabase as any).rpc('get_orders_by_email', {
                     p_email: params.email,
                     p_limit: limit,
                     p_offset: offset
@@ -60,7 +60,7 @@ export const HistoryService = {
                 data = response.data
                 error = response.error
             } else {
-                const response = await supabase.rpc('get_user_orders', {
+                const response = await (supabase as any).rpc('get_user_orders', {
                     p_user_id: safeUserId,
                     p_email: params.email || null,
                     p_limit: limit,
@@ -93,7 +93,7 @@ export const HistoryService = {
      */
     async getUserStats(userId?: string, email?: string) {
         try {
-            const { data, error } = await supabase.rpc('get_user_stats', {
+            const { data, error } = await (supabase as any).rpc('get_user_stats', {
                 p_user_id: userId || null,
                 p_email: email || null
             })
@@ -113,8 +113,8 @@ export const HistoryService = {
      */
     async getOrderDetails(orderId: string) {
         try {
-            const { data, error } = await supabase
-                .from('order_full_details')
+            const { data, error } = await (supabase
+                .from('order_full_details') as any)
                 .select('*')
                 .eq('id', orderId)
                 .single()

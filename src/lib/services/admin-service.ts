@@ -69,9 +69,9 @@ export const AdminService = {
     },
 
     async updateOrderStatus(orderId: string, status: OrderStatus) {
-        const { error } = await supabase
-            .from('orders')
-            .update({ status } as any) // Type assertion might be needed depending on generated types
+        const { error } = await (supabase
+            .from('orders') as any)
+            .update({ status })
             .eq('id', orderId)
 
         if (error) throw error

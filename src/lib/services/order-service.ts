@@ -63,7 +63,7 @@ export const OrderService = {
             console.log("🚀 Sending create_complete_order:", { orderData, itemsData });
 
             // 3. Call Atomic RPC
-            const { data: result, error: rpcError } = await supabase
+            const { data: result, error: rpcError } = await (supabase as any)
                 .rpc('create_complete_order', {
                     p_order_data: orderData,
                     p_items: itemsData
@@ -117,7 +117,7 @@ export const OrderService = {
     // Public Order Tracking
     async getPublicOrder(orderId: string) {
         try {
-            const { data, error } = await supabase
+            const { data, error } = await (supabase as any)
                 .rpc('get_public_order_v1', { p_order_id: orderId })
 
             if (error) throw error

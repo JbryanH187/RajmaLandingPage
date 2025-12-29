@@ -111,16 +111,16 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
 
             if (initialData) {
                 // UPDATE
-                const { error } = await supabase
-                    .from('products')
+                const { error } = await (supabase
+                    .from('products') as any)
                     .update(productData)
                     .eq('id', initialData.id)
 
                 if (error) throw error
             } else {
                 // INSERT
-                const { data: newPro, error } = await supabase
-                    .from('products')
+                const { data: newPro, error } = await (supabase
+                    .from('products') as any)
                     .insert([productData])
                     .select()
                     .single()
@@ -146,8 +146,8 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                     .getPublicUrl(filePath)
 
                 // Update product with image url
-                await supabase
-                    .from('products')
+                await (supabase
+                    .from('products') as any)
                     .update({ image_url: publicUrl })
                     .eq('id', productId)
             }
@@ -168,8 +168,8 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                         price: v.price
                     }))
 
-                    const { error: variantsError } = await supabase
-                        .from('product_variants')
+                    const { error: variantsError } = await (supabase
+                        .from('product_variants') as any)
                         .insert(variantsToInsert)
 
                     if (variantsError) throw variantsError
