@@ -59,7 +59,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     // const supabase = createClientComponentClient()
 
     const form = useForm<ProductFormValues>({
-        resolver: zodResolver(productSchema),
+        resolver: zodResolver(productSchema) as any,
         defaultValues: {
             name: initialData?.name || "",
             description: initialData?.description || "",
