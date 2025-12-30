@@ -49,10 +49,16 @@ export const OrderService = {
             }))
 
             // Call the RPC function (Atomic Transaction)
-            const { data, error } = await supabase.rpc('create_complete_order', {
+            let query = supabase.rpc('create_complete_order', {
                 p_order_data: orderData,
                 p_items: itemsData
-            }).abortSignal(signal)
+            })
+
+            if (signal) {
+                query = query.abortSignal(signal)
+            }
+
+            const { data, error } = await query
 
             if (error) {
                 console.error("Supabase RPC Order Error:", error)
@@ -80,15 +86,19 @@ export const OrderService = {
 
     async hasActiveOrder(userId: string, signal?: AbortSignal) {
         try {
-            const { data, error } = await supabase
+            let query = supabase
                 .from('orders')
                 .select('id, status, created_at')
                 .eq('user_id', userId)
                 .in('status', ['pending', 'confirmed', 'preparing', 'out_for_delivery'])
                 .order('created_at', { ascending: false })
                 .limit(1)
-                .maybeSingle() // ✅ Cambiar single() por maybeSingle()
-                .abortSignal(signal)
+
+            if (signal) {
+                query = query.abortSignal(signal)
+            }
+
+            const { data, error } = await query.maybeSingle()
 
             if (error) {
                 console.error("Error checking active order:", error)
@@ -104,7 +114,7 @@ export const OrderService = {
 
     async getActiveOrderDetails(userId: string, signal?: AbortSignal) {
         try {
-            const { data, error } = await supabase
+            let query = supabase
                 .from('orders')
                 .select(`
                     *,
@@ -118,8 +128,12 @@ export const OrderService = {
                 .in('status', ['pending', 'confirmed', 'preparing', 'out_for_delivery'])
                 .order('created_at', { ascending: false })
                 .limit(1)
-                .maybeSingle()
-                .abortSignal(signal)
+
+            if (signal) {
+                query = query.abortSignal(signal)
+            }
+
+            const { data, error } = await query.maybeSingle()
 
             if (error) {
                 console.error("Failed to fetch active order details:", error)
@@ -136,12 +150,16 @@ export const OrderService = {
     // Método adicional para obtener orden por ID 
     async getOrderById(orderId: string, signal?: AbortSignal) {
         try {
-            const { data, error } = await supabase
+            let query = supabase
                 .from('orders')
                 .select('*')
                 .eq('id', orderId)
-                .maybeSingle()
-                .abortSignal(signal)
+
+            if (signal) {
+                query = query.abortSignal(signal)
+            }
+
+            const { data, error } = await query.maybeSingle()
 
             if (error) {
                 console.error("Error fetching order:", error)
@@ -158,9 +176,15 @@ export const OrderService = {
     // Si tienes un método para obtener el status de una orden
     async getOrderStatus(orderId: string, signal?: AbortSignal) {
         try {
-            const { data: rpcData, error } = await supabase.rpc('get_public_order_v1', {
+            let query = supabase.rpc('get_public_order_v1', {
                 p_order_id: orderId
-            }).abortSignal(signal)
+            })
+
+            if (signal) {
+                query = query.abortSignal(signal)
+            }
+
+            const { data: rpcData, error } = await query
 
             if (error) {
                 console.error("Error fetching order status:", error)
@@ -178,9 +202,14 @@ export const OrderService = {
     // Public Order Tracking
     async getPublicOrder(orderId: string, signal?: AbortSignal) {
         try {
-            const { data, error } = await (supabase as any)
+            let query = (supabase as any)
                 .rpc('get_public_order_v1', { p_order_id: orderId })
-                .abortSignal(signal)
+
+            if (signal) {
+                query = query.abortSignal(signal)
+            }
+
+            const { data, error } = await query
 
             if (error) throw error
             return data
@@ -204,7 +233,7 @@ export const OrderService = {
     // Método helper para buscar órdenes de invitados por email
     async getGuestOrdersByEmail(email: string, signal?: AbortSignal) {
         try {
-            const { data, error } = await supabase
+            let query = supabase
                 .from('orders')
                 .select(`
                     *,
@@ -216,7 +245,12 @@ export const OrderService = {
                 `)
                 .eq('guest_email', email)
                 .order('created_at', { ascending: false })
-                .abortSignal(signal)
+
+            if (signal) {
+                query = query.abortSignal(signal)
+            }
+
+            const { data, error } = await query
 
             if (error) throw error
             return data || []

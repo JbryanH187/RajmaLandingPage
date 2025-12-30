@@ -198,7 +198,7 @@ export default function MenuPage() {
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className="h-8 w-8 text-gray-500 hover:text-primary"
+                                                className="h-8 w-8 text-red-500 hover:text-red-900 hover:bg-red-50"
                                                 onClick={() => {
                                                     setEditingProduct(product)
                                                     setIsDialogOpen(true)
@@ -209,7 +209,7 @@ export default function MenuPage() {
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className="h-8 w-8 text-gray-500 hover:text-red-600"
+                                                className="h-8 w-8 text-red-500 hover:text-red-900 hover:bg-red-50"
                                                 onClick={() => setProductToDelete(product.id)}
                                             >
                                                 <Trash2 className="h-4 w-4" />

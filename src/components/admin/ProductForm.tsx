@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm, useFieldArray, SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -28,7 +28,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { CATEGORIES } from "@/lib/data" // We can use the static list for the dropdown options
+// import { CATEGORIES } from "@/lib/data" // Removed in favor of dynamic fetching
 
 // Schema validation
 const productSchema = z.object({
@@ -39,6 +39,7 @@ const productSchema = z.object({
     is_available: z.boolean().default(true),
     tags: z.string().optional(), // Comma separated string for input, array for DB
     variants: z.array(z.object({
+        id: z.string().optional(),
         name: z.string().min(1, "Nombre de variante requerido"),
         price: z.coerce.number().min(0, "Precio requerido")
     }))
@@ -55,6 +56,24 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     const [isLoading, setIsLoading] = useState(false)
     const [imageFile, setImageFile] = useState<File | null>(null)
     const [imagePreview, setImagePreview] = useState<string | null>(initialData?.image_url || null)
+    const [categories, setCategories] = useState<any[]>([])
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            const { data, error } = await supabase
+                .from('categories')
+                .select('*')
+                .order('sort_order', { ascending: true })
+
+            if (error) {
+                console.error("Error fetching categories:", error)
+                toast.error("Error cargando categorías")
+            } else {
+                setCategories(data || [])
+            }
+        }
+        fetchCategories()
+    }, [])
 
     // const supabase = createClientComponentClient()
 
@@ -152,27 +171,66 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                     .eq('id', productId)
             }
 
-            // 3. Handle Variants
-            // Strategy: Delete all existing variants for this product and re-insert (simpler than syncing)
+            // 3. Handle Variants - Smart Sync
             if (productId && data.variants) {
-                // Delete old
-                if (initialData) {
-                    await supabase.from('product_variants').delete().eq('product_id', productId)
+                // A. Handle Deletions
+                // 1. Get IDs currently in the form
+                const currentVariantIds = data.variants
+                    .map(v => v.id)
+                    .filter(Boolean) as string[]
+
+                // 2. Delete variants from DB that are NOT in the form
+                if (initialData?.variants) {
+                    const initialVariantIds = initialData.variants.map((v: any) => v.id)
+                    const idsToDelete = initialVariantIds.filter((id: string) => !currentVariantIds.includes(id))
+
+                    if (idsToDelete.length > 0) {
+                        const { error: deleteError } = await supabase
+                            .from('product_variants')
+                            .delete()
+                            .in('id', idsToDelete)
+
+                        // Treat FK violation gracefully? For now, we let it fail or log it.
+                        // Ideally we would warn user, but for now throwing is safer than data inconsistency.
+                        if (deleteError) {
+                            console.error("Error deleting variants:", deleteError)
+                            toast.warning("Algunas variantes no se pudieron eliminar porque tienen órdenes asociadas.")
+                        }
+                    }
                 }
 
-                // Insert new
+                // B. Handle Upserts (Insert or Update)
                 if (data.variants.length > 0) {
-                    const variantsToInsert = data.variants.map(v => ({
+                    const variantsToUpsert = data.variants.map(v => ({
+                        id: v.id, // If present, it updates. If undefined, it acts as new for upsert? No, upsert needs ID to match. 
+                        // Actually, standard Supabase upsert needs the PK to trigger update.
+                        // But 'v.id' might be undefined for new ones.
                         product_id: productId,
                         name: v.name,
                         price: v.price
                     }))
 
-                    const { error: variantsError } = await (supabase
-                        .from('product_variants') as any)
-                        .insert(variantsToInsert)
+                    // Separate Insert vs Update for clarity or use upsert if ID presence is handled.
+                    // Upsert w/o ID might not work as intended for auto-gen UUIDs unless configured.
+                    // Safer to split:
 
-                    if (variantsError) throw variantsError
+                    const toInsert = variantsToUpsert.filter(v => !v.id).map(({ id, ...rest }) => rest)
+                    const toUpdate = variantsToUpsert.filter(v => v.id)
+
+                    // Insert New
+                    if (toInsert.length > 0) {
+                        const { error: insertError } = await (supabase.from('product_variants') as any)
+                            .insert(toInsert)
+                        if (insertError) throw insertError
+                    }
+
+                    // Update Existing
+                    if (toUpdate.length > 0) {
+                        // We can loop or use upsert if we trust it. Batch upsert works if all have IDs.
+                        const { error: updateError } = await (supabase.from('product_variants') as any)
+                            .upsert(toUpdate)
+                        if (updateError) throw updateError
+                    }
                 }
             }
 
@@ -254,8 +312,12 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
-                                                {CATEGORIES.map((cat) => (
-                                                    <SelectItem key={cat.id} value={cat.id}>
+                                                {categories.map((cat) => (
+                                                    <SelectItem
+                                                        key={cat.id}
+                                                        value={cat.id}
+                                                        className="cursor-pointer focus:bg-red-50 focus:text-red-700"
+                                                    >
                                                         {cat.label}
                                                     </SelectItem>
                                                 ))}
