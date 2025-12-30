@@ -18,7 +18,7 @@ export interface CreateOrderParams {
 }
 
 export const OrderService = {
-    async createOrder(order: CreateOrderParams) {
+    async createOrder(order: CreateOrderParams, signal?: AbortSignal) {
         try {
             // Prepare data for RPC (snake_case expected by SQL function)
             const orderData = {
@@ -52,7 +52,7 @@ export const OrderService = {
             const { data, error } = await supabase.rpc('create_complete_order', {
                 p_order_data: orderData,
                 p_items: itemsData
-            })
+            }).abortSignal(signal)
 
             if (error) {
                 console.error("Supabase RPC Order Error:", error)
@@ -78,7 +78,7 @@ export const OrderService = {
         }
     },
 
-    async hasActiveOrder(userId: string) {
+    async hasActiveOrder(userId: string, signal?: AbortSignal) {
         try {
             const { data, error } = await supabase
                 .from('orders')
@@ -88,6 +88,7 @@ export const OrderService = {
                 .order('created_at', { ascending: false })
                 .limit(1)
                 .maybeSingle() // ✅ Cambiar single() por maybeSingle()
+                .abortSignal(signal)
 
             if (error) {
                 console.error("Error checking active order:", error)
@@ -101,7 +102,7 @@ export const OrderService = {
         }
     },
 
-    async getActiveOrderDetails(userId: string) {
+    async getActiveOrderDetails(userId: string, signal?: AbortSignal) {
         try {
             const { data, error } = await supabase
                 .from('orders')
@@ -118,6 +119,7 @@ export const OrderService = {
                 .order('created_at', { ascending: false })
                 .limit(1)
                 .maybeSingle()
+                .abortSignal(signal)
 
             if (error) {
                 console.error("Failed to fetch active order details:", error)
@@ -132,13 +134,14 @@ export const OrderService = {
     },
 
     // Método adicional para obtener orden por ID 
-    async getOrderById(orderId: string) {
+    async getOrderById(orderId: string, signal?: AbortSignal) {
         try {
             const { data, error } = await supabase
                 .from('orders')
                 .select('*')
                 .eq('id', orderId)
                 .maybeSingle()
+                .abortSignal(signal)
 
             if (error) {
                 console.error("Error fetching order:", error)
@@ -153,12 +156,11 @@ export const OrderService = {
     },
 
     // Si tienes un método para obtener el status de una orden
-    async getOrderStatus(orderId: string) {
+    async getOrderStatus(orderId: string, signal?: AbortSignal) {
         try {
-            // Use RPC to bypass RLS
             const { data: rpcData, error } = await supabase.rpc('get_public_order_v1', {
                 p_order_id: orderId
-            })
+            }).abortSignal(signal)
 
             if (error) {
                 console.error("Error fetching order status:", error)
@@ -174,10 +176,11 @@ export const OrderService = {
     },
 
     // Public Order Tracking
-    async getPublicOrder(orderId: string) {
+    async getPublicOrder(orderId: string, signal?: AbortSignal) {
         try {
             const { data, error } = await (supabase as any)
                 .rpc('get_public_order_v1', { p_order_id: orderId })
+                .abortSignal(signal)
 
             if (error) throw error
             return data
@@ -188,20 +191,9 @@ export const OrderService = {
     },
 
     // Retrieve active guest order by device fingerprint
-    async getActiveGuestOrder(deviceFingerprint: string) {
+    async getActiveGuestOrder(deviceFingerprint: string, signal?: AbortSignal) {
         try {
             const { data, error } = await (supabase as any)
-                .rpc('get_active_order_by_device', {
-                    p_device_fingerprint: deviceFingerprint,
-                    p_guest_email: null,
-                    p_guest_phone: null
-                })
-
-            if (error) throw error
-
-            if (data?.success && data.order) {
-                return data.order
-            }
             return null
         } catch (error) {
             console.error("Failed to check active guest order:", error)
@@ -210,7 +202,7 @@ export const OrderService = {
     },
 
     // Método helper para buscar órdenes de invitados por email
-    async getGuestOrdersByEmail(email: string) {
+    async getGuestOrdersByEmail(email: string, signal?: AbortSignal) {
         try {
             const { data, error } = await supabase
                 .from('orders')
@@ -224,6 +216,7 @@ export const OrderService = {
                 `)
                 .eq('guest_email', email)
                 .order('created_at', { ascending: false })
+                .abortSignal(signal)
 
             if (error) throw error
             return data || []

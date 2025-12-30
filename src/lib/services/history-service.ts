@@ -37,7 +37,7 @@ export const HistoryService = {
         email?: string,
         page?: number,
         limit?: number
-    }) {
+    }, signal?: AbortSignal) {
         const page = params.page || 1
         const limit = params.limit || 10
         const offset = (page - 1) * limit
@@ -56,7 +56,7 @@ export const HistoryService = {
                     p_email: params.email,
                     p_limit: limit,
                     p_offset: offset
-                })
+                }).abortSignal(signal)
                 data = response.data
                 error = response.error
             } else {
@@ -65,7 +65,7 @@ export const HistoryService = {
                     p_email: params.email || null,
                     p_limit: limit,
                     p_offset: offset
-                })
+                }).abortSignal(signal)
                 data = response.data
                 error = response.error
             }
@@ -91,12 +91,12 @@ export const HistoryService = {
     /**
      * Get user statistics
      */
-    async getUserStats(userId?: string, email?: string) {
+    async getUserStats(userId?: string, email?: string, signal?: AbortSignal) {
         try {
             const { data, error } = await (supabase as any).rpc('get_user_stats', {
                 p_user_id: userId || null,
                 p_email: email || null
-            })
+            }).abortSignal(signal)
 
             if (error) throw error
 
@@ -111,13 +111,14 @@ export const HistoryService = {
     /**
      * Get full details for a single order
      */
-    async getOrderDetails(orderId: string) {
+    async getOrderDetails(orderId: string, signal?: AbortSignal) {
         try {
             const { data, error } = await (supabase
                 .from('order_full_details') as any)
                 .select('*')
                 .eq('id', orderId)
                 .single()
+                .abortSignal(signal)
 
             if (error) throw error
 

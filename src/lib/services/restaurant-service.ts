@@ -21,12 +21,13 @@ export interface RestaurantStatus {
 }
 
 export const RestaurantService = {
-    async getStatus(): Promise<RestaurantStatus> {
+    async getStatus(signal?: AbortSignal): Promise<RestaurantStatus> {
         try {
             // 1. Check Database Config (Manual Override)
             const { data, error } = await supabase
                 .from('restaurant_config')
                 .select('*')
+                .abortSignal(signal)
                 .single()
 
             if (error) {

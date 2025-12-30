@@ -16,6 +16,7 @@ interface OrderHistoryListProps {
 import { useCartStore } from "@/lib/store/cart-store"
 import { toast } from "sonner"
 import { RefreshCw, Loader2, RotateCcw } from "lucide-react"
+import { useAbortableRequest } from "@/lib/hooks/useAbortableRequest"
 
 // ... imports
 
@@ -73,63 +74,55 @@ export function OrderHistoryList({ userId, email }: OrderHistoryListProps) {
 
     const [error, setError] = useState<string | null>(null)
 
-    useEffect(() => {
-        let mounted = true
-        // Abort controller for cancelling in-flight requests
-        const controller = new AbortController()
+    const { request, abort } = useAbortableRequest()
 
-        const fetchOrders = async () => {
+    useEffect(() => {
+        abort() // Cancel any previous pending requests when deps change
+
+        async function loadOrders() {
             if (!userId && !email) {
-                if (mounted) setLoading(false)
+                setLoading(false)
                 return
             }
 
-            try {
-                if (mounted) {
-                    setLoading(true)
-                    setError(null)
-                }
+            setLoading(true)
+            setError(null)
 
-                // Special handling for Demo User
-                const isDemo = userId === 'admin-demo' || userId === 'demo-user' || email === 'admin@rajma.com' || email === 'demo@rajma.com';
+            // Special handling for Demo User
+            const isDemo = userId === 'admin-demo' || userId === 'demo-user' || email === 'admin@rajma.com' || email === 'demo@rajma.com';
 
-                const queryParams = isDemo ? {
-                    userId: undefined,
-                    email: 'demo@rajma.com'
-                } : {
-                    userId,
-                    email
-                }
-
-                // Add a timeout of 10 seconds
-                const timeoutPromise = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error("Timeout")), 10000)
-                )
-
-                const { orders } = await Promise.race([
-                    HistoryService.getUserOrders(queryParams),
-                    timeoutPromise
-                ]) as { orders: OrderHistoryItem[] }
-
-                if (mounted) setOrders(orders)
-            } catch (err) {
-                const errorMessage = err instanceof Error ? err.message : 'Error desconocido'
-                if (errorMessage !== 'AbortError' && mounted) {
-                    console.error("Failed to load orders", err)
-                    setError("No se pudo cargar el historial. Intenta recargar.")
-                }
-            } finally {
-                if (mounted) setLoading(false)
+            const queryParams = isDemo ? {
+                userId: undefined,
+                email: 'demo@rajma.com'
+            } : {
+                userId,
+                email
             }
+
+            await request(
+                (signal) => HistoryService.getUserOrders(queryParams, signal),
+                {
+                    timeout: 10000,
+                    onSuccess: (data) => {
+                        setOrders(data.orders)
+                        setLoading(false)
+                    },
+                    onError: (err) => {
+                        console.error("Failed to load orders", err)
+                        setError("No se pudo cargar el historial. Intenta recargar.")
+                        setLoading(false)
+                    }
+                }
+            )
         }
 
-        fetchOrders()
+        loadOrders()
 
         return () => {
-            mounted = false
-            controller.abort()
+            // Cleanup handled by hook, but manual abort safe here too
+            abort()
         }
-    }, [userId, email])
+    }, [userId, email, request, abort])
 
     // Removed standalone loadOrders to avoid race conditions with useEffect
     const loadOrders = () => { /* no-op or trigger re-fetch if needed */ }

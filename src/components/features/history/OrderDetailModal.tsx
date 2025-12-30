@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
@@ -94,6 +94,7 @@ export function OrderDetailModal({ orderId, isOpen, onOpenChange }: OrderDetailM
                                         {order.order_type === 'pickup' ? '🥡' : '🛵'}
                                     </div>
                                     <DialogTitle className="font-serif text-2xl font-bold uppercase tracking-widest text-black text-center">Rajma Sushi</DialogTitle>
+                                    <DialogDescription className="sr-only">Comprobante de orden</DialogDescription>
                                     <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em]">
                                         Comprobante #{order.order_number}
                                     </p>

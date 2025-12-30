@@ -92,11 +92,9 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
                         <DialogTitle className="text-2xl font-bold text-foreground">
                             {product.name}
                         </DialogTitle>
-                        {product.description && (
-                            <DialogDescription className="text-muted-foreground mt-2 leading-relaxed">
-                                {product.description}
-                            </DialogDescription>
-                        )}
+                        <DialogDescription className="text-muted-foreground mt-2 leading-relaxed">
+                            {product.description || "Detalles del producto"}
+                        </DialogDescription>
                     </DialogHeader>
 
                     {/* Variants Selection */}

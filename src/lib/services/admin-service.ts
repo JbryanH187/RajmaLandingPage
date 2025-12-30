@@ -39,7 +39,7 @@ export interface TopSellingItem {
 export const AdminService = {
     // --- Order Management ---
 
-    async getOrders(statusFilter?: OrderStatus | 'all', dateFilter?: string) {
+    async getOrders(statusFilter?: OrderStatus | 'all', dateFilter?: string, signal?: AbortSignal) {
         let query = supabase
             .from('orders')
             .select(`
@@ -63,7 +63,7 @@ export const AdminService = {
             query = query.gte('created_at', start).lte('created_at', end)
         }
 
-        const { data, error } = await query
+        const { data, error } = await query.abortSignal(signal)
         if (error) throw error
         return data
     },
@@ -92,8 +92,8 @@ export const AdminService = {
 
     // --- Analytics ---
 
-    async getDashboardStats(): Promise<DashboardStats> {
-        const { data, error } = await supabase.rpc('get_dashboard_stats')
+    async getDashboardStats(signal?: AbortSignal): Promise<DashboardStats> {
+        const { data, error } = await supabase.rpc('get_dashboard_stats').abortSignal(signal)
         if (error) throw error
         return data as DashboardStats
     },

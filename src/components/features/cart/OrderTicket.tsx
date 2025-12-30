@@ -134,7 +134,7 @@ export function OrderTicket() {
             if (controller.signal.aborted) return
 
             try {
-                const status = await RestaurantService.getStatus()
+                const status = await RestaurantService.getStatus(controller.signal)
                 if (!controller.signal.aborted) {
                     setRestaurantStatus(status)
                 }
@@ -159,13 +159,15 @@ export function OrderTicket() {
     // If we are in 'receipt' mode, and user is logged in, but we have no 'guestOrder' (local state),
     // we must fetch it from the DB to show the receipt!
     useEffect(() => {
+        const controller = new AbortController()
+
         const hydrateReceipt = async () => {
             if (ticketStatus === 'receipt' && user && !guestOrder) {
                 console.log("Hydrating active order receipt for user...")
-                setIsSubmitting(true) // Show loading state on ticket? Or just wait.
+                setIsSubmitting(true)
                 try {
-                    const activeOrder = await OrderService.getActiveOrderDetails(user.id) as any
-                    if (activeOrder) {
+                    const activeOrder = await OrderService.getActiveOrderDetails(user.id, controller.signal) as any
+                    if (!controller.signal.aborted && activeOrder) {
                         // Transform to GuestOrder format
                         setGuestOrder({
                             orderId: activeOrder.id,
@@ -190,21 +192,33 @@ export function OrderTicket() {
                                 variants: item.product_variants ? [item.product_variants] : [] // Mock structure if needed
                             }))
                         })
-                    } else {
-                        // If no active order found but we are in receipt mode? Maybe close it or show empty?
+                    } else if (activeOrder === null) {
                         console.warn("No active order found for hydration")
-                        // closeTicket() // Optional: auto-close if nothing found?
                     }
-                } catch (err) {
-                    console.error("Failed to hydrate receipt", err)
+                } catch (err: any) {
+                    if (err.name !== 'AbortError') {
+                        console.error("Failed to hydrate receipt", err)
+                    }
                 } finally {
-                    setIsSubmitting(false)
+                    if (!controller.signal.aborted) {
+                        setIsSubmitting(false)
+                    }
                 }
+            } else {
+                // Nothing to hydrate or requirements not met, ensure loading is off if we turned it on?
+                // But we only turn it on INSIDE the if block.
             }
         }
 
         if (isTicketOpen && ticketStatus === 'receipt') {
             hydrateReceipt()
+        } else {
+            // Safety fallback: if we are NOT hydrating (e.g. switching modes), ensure loading is off?
+            // No, because submitting might be happening.
+        }
+
+        return () => {
+            controller.abort()
         }
     }, [ticketStatus, user, guestOrder, isTicketOpen, setGuestOrder])
 
@@ -302,6 +316,7 @@ export function OrderTicket() {
             // Simulate small delay for UX if needed, or just switch
             setTimeout(() => {
                 setTicketStatus('receipt')
+                setIsSubmitting(false)
                 // Show success toast
                 toast.success("¡Orden creada con éxito!", {
                     description: "Tu pedido ha sido recibido y se está procesando.",
