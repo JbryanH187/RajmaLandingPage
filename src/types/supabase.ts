@@ -220,6 +220,62 @@ export interface Database {
                     notes?: string | null
                 }
             }
+            notifications: {
+                Row: {
+                    id: string
+                    user_id: string
+                    order_id: string
+                    title: string
+                    message: string
+                    is_read: boolean
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    user_id: string
+                    order_id: string
+                    title: string
+                    message: string
+                    is_read?: boolean
+                    created_at?: string
+                }
+                Update: {
+                    user_id?: string
+                    order_id?: string
+                    title?: string
+                    message?: string
+                    is_read?: boolean
+                    created_at?: string
+                }
+            }
+            guest_notifications: {
+                Row: {
+                    id: string
+                    email: string
+                    order_id: string
+                    title: string
+                    message: string
+                    is_read: boolean
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    email: string
+                    order_id: string
+                    title: string
+                    message: string
+                    is_read?: boolean
+                    created_at?: string
+                }
+                Update: {
+                    email?: string
+                    order_id?: string
+                    title?: string
+                    message?: string
+                    is_read?: boolean
+                    created_at?: string
+                }
+            }
         }
         Views: {
             user_order_history: {

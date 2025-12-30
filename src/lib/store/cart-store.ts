@@ -16,6 +16,8 @@ interface GuestOrder {
     phone?: string;
     orderId?: string;       // For tracking
     orderNumber?: string;   // For display
+    status?: string;        // Order status (pending, confirmed, etc.)
+    isGuest?: boolean;      // Updated: Add isGuest property
 }
 
 
@@ -24,6 +26,7 @@ interface CartState {
     addItem: (product: Product, quantity: number, variantId?: string, notes?: string) => void;
     removeItem: (cartId: string) => void;
     updateQuantity: (cartId: string, quantity: number) => void;
+    updateNotes: (cartId: string, notes: string) => void;
     setItems: (items: CartItem[]) => void;
     clearCart: () => void;
     getCartTotal: () => number;
@@ -39,6 +42,10 @@ interface CartState {
     setTicketStatus: (status: 'review' | 'processing' | 'receipt') => void;
     orderType: 'delivery' | 'pickup';
     setOrderType: (type: 'delivery' | 'pickup') => void;
+
+    // Notification State
+    hasUnreadUpdate: boolean;
+    setHasUnreadUpdate: (has: boolean) => void;
 }
 
 // Create store with conditional persistence (only in browser)
@@ -94,6 +101,15 @@ const createStore = () => {
                 ),
             }));
         },
+        updateNotes: (cartId: string, notes: string) => {
+            set((state: CartState) => ({
+                items: state.items.map((item) =>
+                    item.cartId === cartId
+                        ? { ...item, notes: notes }
+                        : item
+                ),
+            }));
+        },
         clearCart: () => set((state: CartState) => ({ items: [] })),
         getCartTotal: () => {
             return get().items.reduce((total: number, item: CartItem) => total + item.price * item.quantity, 0);
@@ -121,6 +137,9 @@ const createStore = () => {
         // Order Type (Pickup vs Delivery)
         orderType: 'delivery' as 'delivery' | 'pickup',
         setOrderType: (type: 'delivery' | 'pickup') => set(() => ({ orderType: type })),
+
+        hasUnreadUpdate: false,
+        setHasUnreadUpdate: (has: boolean) => set(() => ({ hasUnreadUpdate: has })),
     });
 
     // Only use persist in browser environment

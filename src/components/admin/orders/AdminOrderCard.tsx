@@ -25,7 +25,6 @@ export function AdminOrderCard({ order, onStatusChange, onViewDetails }: AdminOr
             case 'pending': return 'bg-yellow-100 text-yellow-800'
             case 'confirmed': return 'bg-blue-100 text-blue-800'
             case 'preparing': return 'bg-orange-100 text-orange-800'
-            case 'ready': return 'bg-green-100 text-green-800'
             case 'out_for_delivery': return 'bg-indigo-100 text-indigo-800'
             case 'delivered': return 'bg-gray-100 text-gray-800'
             case 'cancelled': return 'bg-red-100 text-red-800'
@@ -40,10 +39,8 @@ export function AdminOrderCard({ order, onStatusChange, onViewDetails }: AdminOr
             case 'confirmed':
                 return { label: 'Cocinar', action: 'preparing', icon: ChefHat, color: 'bg-orange-600 hover:bg-orange-700' }
             case 'preparing':
-                return { label: 'Listo', action: 'ready', icon: CheckCircle, color: 'bg-green-600 hover:bg-green-700' }
-            case 'ready':
                 return isDelivery
-                    ? { label: 'Enviar', action: 'out_for_delivery', icon: Truck, color: 'bg-indigo-600 hover:bg-indigo-700' }
+                    ? { label: 'En Ruta', action: 'out_for_delivery', icon: Truck, color: 'bg-indigo-600 hover:bg-indigo-700' }
                     : { label: 'Entregar', action: 'delivered', icon: CheckCircle, color: 'bg-gray-800 hover:bg-gray-900' }
             case 'out_for_delivery':
                 return { label: 'Completar', action: 'delivered', icon: CheckCircle, color: 'bg-gray-800 hover:bg-gray-900' }

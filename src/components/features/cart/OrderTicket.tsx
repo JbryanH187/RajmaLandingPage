@@ -5,7 +5,7 @@ import { QRCodeSVG } from "qrcode.react"
 import { Separator } from "@/components/ui/separator"
 import { formatCurrency } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Share2, Download, X, Send, Copy, Check, Bike, Store } from "lucide-react"
+import { Share2, Download, X, Send, Copy, Check, Bike, Store, Pencil, Trash2 } from "lucide-react"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useCartStore } from "@/lib/store/cart-store"
 import { Input } from "@/components/ui/input"
@@ -16,17 +16,29 @@ import { RestaurantService } from "@/lib/services/restaurant-service"
 import { toast } from "sonner"
 
 import { ActiveOrderModal } from "./ActiveOrderModal"
+import { GuestWarningModal } from "./GuestWarningModal" // New Import
+// import { useRealtimeOrder } from "@/lib/hooks/useRealtimeOrder" // REMOVED: Unused
 
 import { usePathname } from "next/navigation"
 
 export function OrderTicket() {
     const pathname = usePathname()
-    const { user } = useAuthStore()
+    const { user, openAuthModal } = useAuthStore() // Destructure openAuthModal for modal
+
+    // ENABLE REALTIME UPDATES DIRECTLY IN TICKET
+    // This ensures that even if the active order button is hidden/unmounted, 
+    // the ticket itself keeps the connection alive.
+    // REMOVED IN FAVOR OF GLOBAL TRACKER
+    // useRealtimeOrder()
+
+    // ... existing ...
+
 
     const {
         items,
         getCartTotal,
         isTicketOpen,
+        openTicket,   // Added missing destructure
         closeTicket,
         clearCart,
         // Global state for persistence
@@ -35,7 +47,10 @@ export function OrderTicket() {
         setGuestOrder,
         guestOrder,
         orderType,
-        setOrderType
+        setOrderType,
+        updateNotes, // NEW
+        removeItem,   // NEW
+        setHasUnreadUpdate
     } = useCartStore()
 
     // Check conditional here after hooks
@@ -50,6 +65,7 @@ export function OrderTicket() {
 
     // Active Order Modal State
     const [isActiveOrderModalOpen, setIsActiveOrderModalOpen] = useState(false)
+    const [showGuestModal, setShowGuestModal] = useState(false) // Guest Warning Modal State
 
     // Reset/Restore inputs logic
     useEffect(() => {
@@ -76,10 +92,21 @@ export function OrderTicket() {
     const total = getCartTotal()
 
     // Logic for display items/total depending on status
-    // If receipt & empty cart (e.g. refreshed), use stored guestOrder
-    const displayItems = (items.length > 0 ? items : guestOrder?.items) || []
-    const displayTotal = (items.length > 0 ? total : guestOrder?.total) || 0
-    const displayOrderType = (ticketStatus === 'receipt' && guestOrder) ? guestOrder.orderType : orderType
+    // FIX: If we are in 'receipt' mode, we MUST show the guestOrder (historical) items, ignoring the current cart!
+    // Priority: Receipt Mode -> guestOrder; Review/Processing -> items
+
+    // If ticketStatus is receipt, try guestOrder items first. If null (shouldn't be), fall back to items if user wants to see what they tried to add? No, receipt means receipt.
+    const isReceiptMode = ticketStatus === 'receipt'
+
+    const displayItems = isReceiptMode
+        ? (guestOrder?.items || [])
+        : (items.length > 0 ? items : (guestOrder?.items || []))
+
+    const displayTotal = isReceiptMode
+        ? (guestOrder?.total || 0)
+        : (items.length > 0 ? total : (guestOrder?.total || 0))
+
+    const displayOrderType = (isReceiptMode && guestOrder) ? guestOrder.orderType : orderType
 
     const date = new Date().toLocaleDateString('es-MX', {
         weekday: 'long',
@@ -128,9 +155,70 @@ export function OrderTicket() {
         }
     }, [])
 
+    // --- HYDRATION FIX FOR LOGGED-IN USERS ---
+    // If we are in 'receipt' mode, and user is logged in, but we have no 'guestOrder' (local state),
+    // we must fetch it from the DB to show the receipt!
+    useEffect(() => {
+        const hydrateReceipt = async () => {
+            if (ticketStatus === 'receipt' && user && !guestOrder) {
+                console.log("Hydrating active order receipt for user...")
+                setIsSubmitting(true) // Show loading state on ticket? Or just wait.
+                try {
+                    const activeOrder = await OrderService.getActiveOrderDetails(user.id) as any
+                    if (activeOrder) {
+                        // Transform to GuestOrder format
+                        setGuestOrder({
+                            orderId: activeOrder.id,
+                            orderNumber: activeOrder.order_number,
+                            status: activeOrder.status, // Hydrate Status
+                            name: activeOrder.guest_name || user.full_name || 'Usuario',
+                            email: activeOrder.guest_email || user.email || '',
+                            phone: activeOrder.guest_phone || user.phone || '',
+                            address: activeOrder.delivery_address || '',
+                            orderType: activeOrder.order_type as 'delivery' | 'pickup',
+                            total: Number(activeOrder.total),
+                            date: new Date(activeOrder.created_at).toLocaleDateString(),
+                            isGuest: false,
+                            items: activeOrder.order_items.map((item: any) => ({
+                                cartId: item.id, // Use DB id as cartId
+                                id: item.product_id,
+                                name: item.products?.name || 'Producto',
+                                price: Number(item.unit_price),
+                                quantity: item.quantity,
+                                notes: item.notes,
+                                selectedVariantId: item.variant_id,
+                                variants: item.product_variants ? [item.product_variants] : [] // Mock structure if needed
+                            }))
+                        })
+                    } else {
+                        // If no active order found but we are in receipt mode? Maybe close it or show empty?
+                        console.warn("No active order found for hydration")
+                        // closeTicket() // Optional: auto-close if nothing found?
+                    }
+                } catch (err) {
+                    console.error("Failed to hydrate receipt", err)
+                } finally {
+                    setIsSubmitting(false)
+                }
+            }
+        }
+
+        if (isTicketOpen && ticketStatus === 'receipt') {
+            hydrateReceipt()
+        }
+    }, [ticketStatus, user, guestOrder, isTicketOpen, setGuestOrder])
+
     const [deliveryInstructions, setDeliveryInstructions] = useState('')
 
     // ... existing confirm logic ...
+
+    const onConfirmMock = () => {
+        if (!user) {
+            setShowGuestModal(true)
+        } else {
+            handleConfirm()
+        }
+    }
 
     const handleConfirm = async () => {
         // Block if closed
@@ -156,10 +244,9 @@ export function OrderTicket() {
             // But let's check date? For now, if `guestOrder` exists, we assume active.
             // BUT: User might want to clear it?
             // Let's assume if it exists, they have one.
-            if (guestOrder && ticketStatus !== 'review') {
-                // Simple freshness check: if order is older than 24h, ignore it.
-                const orderDate = new Date(guestOrder.date); // This might be a string format, careful
-                // Let's just use existence for now.
+            // Check Local Storage (Guest)
+            // STRICT BLOCK: If guestOrder exists, they cannot place a new one.
+            if (guestOrder) {
                 setIsActiveOrderModalOpen(true)
                 return
             }
@@ -190,20 +277,24 @@ export function OrderTicket() {
             })
 
             // Save Guest Order to Store (Local Persistence)
-            if (!effectiveUser) {
-                setGuestOrder({
-                    name: guestName || (isDemoUser ? 'Usuario Demo' : ''),
-                    address: orderType === 'delivery' ? guestAddress : '',
-                    items: items,
-                    total: total,
-                    date: date,
-                    orderType: orderType,
-                    email: guestEmail || (isDemoUser ? 'demo@rajmasushi.com' : ''),
-                    phone: guestPhone || (isDemoUser ? '0000000000' : ''),
-                    orderId: result.orderId,
-                    orderNumber: result.orderNumber
-                })
-            }
+            // Even for logged-in users, we set this so the "Receipt View" has data to show immediately!
+            setGuestOrder({
+                name: guestName || user?.full_name || (isDemoUser ? 'Usuario Demo' : 'Usuario'),
+                address: orderType === 'delivery' ? (guestAddress || user?.default_address || '') : '',
+                items: items,
+                total: total,
+                date: date,
+                orderType: orderType,
+                email: guestEmail || user?.email || (isDemoUser ? 'demo@rajmasushi.com' : ''),
+                phone: guestPhone || user?.phone || (isDemoUser ? '0000000000' : ''),
+                orderId: result.orderId || undefined,
+                orderNumber: result.orderNumber || undefined,
+                status: 'pending', // Default status for new orders
+                isGuest: !user // Flag to distinguish if needed
+            })
+
+            // Clear the working cart items so ActiveOrderButton knows we are in 'receipt' mode
+            clearCart()
 
             // SUCCESS: Now we trigger the "Fly Away" animation
             setTicketStatus('processing')
@@ -226,9 +317,9 @@ export function OrderTicket() {
 
             // Handle RLS Policy Error (42501) specifically to help the user
             if (error?.code === '42501') {
-                toast.error("Error de Sistema (Base de Datos)", {
-                    description: "No se tiene permiso para crear la orden. Es probable que falte ejecutar la migración SQL 'migration_guest_orders.sql' en Supabase.",
-                    duration: 8000,
+                toast.error("Error al procesar la orden", {
+                    description: "No se pudo completar el pedido. Por favor intenta nuevamente o contacta al restaurante.",
+                    duration: 5000,
                 })
             } else {
                 toast.error("Error al crear la orden", {
@@ -240,19 +331,23 @@ export function OrderTicket() {
 
     const handleClose = () => {
         closeTicket()
-        // We do NOT clear cart automatically if it's a guest receipt?
-        // Actually, logic was: Receipt -> Close -> Clear.
-        // But if we want persistence, we keep 'guestOrder'.
-        // We WILL clear the *Cart Items* from the working cart, but keep 'guestOrder' for history.
 
-        if (ticketStatus === 'receipt') {
+        // Logic: If the order is 'delivered' (or cancelled), and the user closes the ticket,
+        // we assume they are done with this active session. We clear the guestOrder
+        // so the floating button disappears.
+        if (guestOrder?.status === 'delivered' || guestOrder?.status === 'cancelled') {
+            setGuestOrder(null)
+            setHasUnreadUpdate(false)
+            clearCart() // Ensure cart is empty too
+        } else if (ticketStatus === 'receipt') {
+            // Normal receipt close (not delivered yet), just clear current working items
             clearCart()
-            // Do NOT clear inputs yet, so if they reopen it might be there?
-            // Actually, if we clear items, isTicketOpen checks items.length.
-            // We changed the check to `if (!isTicketOpen ...)` but `items.length` check was there.
-            // We need to allow opening ticket if `guestOrder` exists even if `items` is empty!
         }
     }
+
+
+
+
 
     // Animation variants
     const wrapperVariants = {
@@ -326,7 +421,7 @@ export function OrderTicket() {
                                     items={displayItems}
                                     total={displayTotal}
                                     date={date}
-                                    onConfirm={handleConfirm}
+                                    onConfirm={onConfirmMock}
                                     onClose={handleClose}
                                     isReceipt={false}
                                     orderType={orderType}
@@ -338,7 +433,10 @@ export function OrderTicket() {
                                     isSubmitting={isSubmitting} // Pass loading state
                                     deliveryInstructions={deliveryInstructions}
                                     setDeliveryInstructions={setDeliveryInstructions}
+
                                     restaurantStatus={restaurantStatus}
+                                    updateNotes={updateNotes} // NEW
+                                    removeItem={removeItem}   // NEW
                                 />
                             </motion.div>
                         )}
@@ -364,6 +462,8 @@ export function OrderTicket() {
                                     isReceipt={true}
                                     orderType={displayOrderType}
                                     guestOrder={guestOrder} // Pass guestOrder explicitly for QR code access
+                                    setGuestName={setGuestName}
+                                    setGuestAddress={setGuestAddress}
                                 />
                             </motion.div>
                         )}
@@ -375,12 +475,52 @@ export function OrderTicket() {
                         onViewOrder={() => {
                             setIsActiveOrderModalOpen(false)
                             setTicketStatus('receipt')
+                            openTicket() // Fix: Actually open the ticket!
+                        }}
+                    />
+                    <GuestWarningModal
+                        isOpen={showGuestModal}
+                        onClose={() => setShowGuestModal(false)}
+                        onConfirmGuest={() => {
+                            setShowGuestModal(false)
+                            handleConfirm()
+                        }}
+                        onLogin={() => {
+                            setShowGuestModal(false)
+                            openAuthModal()
                         }}
                     />
                 </motion.div>
             )}
         </AnimatePresence>
     )
+}
+
+interface TicketContentProps {
+    user: any
+    guestName: string
+    setGuestName: (val: string) => void
+    guestAddress: string
+    setGuestAddress: (val: string) => void
+    items: any[]
+    total: number
+    date: string
+    onConfirm?: () => void
+    onClose: () => void
+    isReceipt: boolean
+    orderType: 'delivery' | 'pickup'
+    setOrderType?: (type: 'delivery' | 'pickup') => void
+    guestEmail?: string
+    setGuestEmail?: (val: string) => void
+    guestPhone?: string
+    setGuestPhone?: (val: string) => void
+    guestOrder?: any
+    isSubmitting?: boolean
+    deliveryInstructions?: string
+    setDeliveryInstructions?: (val: string) => void
+    restaurantStatus?: { isOpen: boolean; message: string | null }
+    updateNotes?: (id: string, note: string) => void
+    removeItem?: (id: string) => void
 }
 
 function TicketContent({
@@ -406,9 +546,30 @@ function TicketContent({
     isSubmitting = false, // Default to false
     deliveryInstructions,
     setDeliveryInstructions,
-    restaurantStatus
-}: any) {
+    restaurantStatus,
+    updateNotes, // NEW
+    removeItem   // NEW
+}: TicketContentProps) {
     const [copied, setCopied] = useState(false)
+
+    // Local state for editing notes inside the ticket
+    const [editingItemId, setEditingItemId] = useState<string | null>(null)
+    const [tempNote, setTempNote] = useState("")
+
+    const startEditing = (itemId: string, currentNote: string) => {
+        setEditingItemId(itemId)
+        setTempNote(currentNote || "")
+    }
+
+    const saveNote = (itemId: string) => {
+        updateNotes?.(itemId, tempNote)
+        setEditingItemId(null)
+    }
+
+    const cancelEdit = () => {
+        setEditingItemId(null)
+        setTempNote("")
+    }
 
     const displayName = user?.full_name || user?.email || guestName || "Invitado"
     const displayAvatar = user?.avatar_url
@@ -425,6 +586,32 @@ function TicketContent({
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)
     }
+
+    // Status Helper
+    const getStatusInfo = (status?: string) => {
+        if (!status) return null
+
+        switch (status) { // Normalize status check just in case
+            case 'pending':
+                return { label: 'Validando Orden', color: 'bg-yellow-50 text-yellow-700 border-yellow-200' }
+            case 'confirmed':
+                return { label: 'Confirmada', color: 'bg-blue-50 text-blue-700 border-blue-200' }
+            case 'preparing':
+                return { label: 'Preparando', color: 'bg-orange-50 text-orange-700 border-orange-200' }
+            case 'out_for_delivery':
+                return { label: 'En Camino', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' }
+            case 'ready_for_pickup': // Just in case
+                return { label: 'Listo para Recoger', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' }
+            case 'delivered':
+                return { label: 'Entregado', color: 'bg-green-50 text-green-700 border-green-200' }
+            case 'cancelled':
+                return { label: 'Cancelada', color: 'bg-red-50 text-red-700 border-red-200' }
+            default:
+                return { label: 'Procesando...', color: 'bg-gray-50 text-gray-600 border-gray-200' }
+        }
+    }
+
+    const itemStatus = getStatusInfo(guestOrder?.status || (isReceipt ? 'pending' : undefined))
 
     return (
         <>
@@ -476,6 +663,13 @@ function TicketContent({
                         <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em]">
                             {isReceipt ? 'Comprobante' : 'Revisar Orden'} #Local-884
                         </p>
+
+                        {/* STATUS BADGE - ONLY IN RECEIPT MODE */}
+                        {isReceipt && itemStatus && (
+                            <div className={`mt-2 px-6 py-2 rounded-full text-xs font-bold border ${itemStatus.color} shadow-sm animate-in fade-in zoom-in duration-500 tracking-wider`}>
+                                {itemStatus.label}
+                            </div>
+                        )}
                     </div>
 
                     <div className="border-t-2 border-dashed border-gray-100 my-4 shrink-0" />
@@ -492,13 +686,13 @@ function TicketContent({
                     {!isReceipt && (
                         <div className="flex bg-gray-100 p-1 rounded-xl mb-4 shrink-0">
                             <button
-                                onClick={() => setOrderType('delivery')}
+                                onClick={() => setOrderType && setOrderType('delivery')}
                                 className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all ${orderType === 'delivery' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-gray-700'}`}
                             >
                                 <Bike className="w-4 h-4" /> Domicilio
                             </button>
                             <button
-                                onClick={() => setOrderType('pickup')}
+                                onClick={() => setOrderType && setOrderType('pickup')}
                                 className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all ${orderType === 'pickup' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-gray-700'}`}
                             >
                                 <Store className="w-4 h-4" /> Pasar a Recoger
@@ -540,7 +734,7 @@ function TicketContent({
                             <div className="w-full">
                                 <Input
                                     value={guestPhone}
-                                    onChange={(e) => setGuestPhone(e.target.value)}
+                                    onChange={(e) => setGuestPhone && setGuestPhone(e.target.value)}
                                     placeholder="Teléfono (Para confirmar orden)"
                                     type="tel"
                                     className="h-8 text-xs bg-white"
@@ -565,7 +759,7 @@ function TicketContent({
                                             <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Instrucciones de Entrega</p>
                                             <Input
                                                 value={deliveryInstructions}
-                                                onChange={(e) => setDeliveryInstructions(e.target.value)}
+                                                onChange={(e) => setDeliveryInstructions && setDeliveryInstructions(e.target.value)}
                                                 placeholder="Ej: Casa azul, timbre 2..."
                                                 className="h-8 text-xs bg-white border-gray-200"
                                             />
@@ -601,18 +795,18 @@ function TicketContent({
                     </div>
 
                     {/* ITEMS LIST (Scrolls within this container if needed, but simplified to scroll whole upper area) */}
-                    <div className="space-y-2 text-left bg-white pb-4">
+                    <div className="space-y-3 text-left pb-4 px-2">
                         {items.map((item: any) => (
-                            <div key={item.cartId} className="group flex justify-between items-start text-sm py-3 border-b border-gray-100 border-dashed last:border-0 hover:bg-gray-50/50 transition-colors">
-                                <div className="flex gap-3 pr-4">
+                            <div key={item.cartId} className="group flex justify-between items-start text-sm p-4 bg-gray-50/50 border border-gray-100 rounded-2xl hover:bg-gray-50 transition-colors relative shadow-sm">
+                                <div className="flex gap-4 pr-4 flex-1 items-center">
                                     {/* Quantity Badge */}
-                                    <div className="w-6 h-6 flex items-center justify-center bg-gray-100 text-black text-xs font-bold rounded-md shrink-0 mt-0.5 shadow-sm border border-gray-200">
+                                    <div className="w-8 h-8 flex items-center justify-center bg-white text-black text-sm font-bold rounded-full shrink-0 shadow-sm border border-gray-100">
                                         {item.quantity}
                                     </div>
 
                                     {/* Item Details */}
-                                    <div className="space-y-0.5 text-left">
-                                        <p className="font-bold text-gray-900 leading-tight">
+                                    <div className="space-y-0.5 text-left flex-1">
+                                        <p className="font-bold text-gray-900 leading-tight text-base">
                                             {item.name}
                                         </p>
                                         {item.selectedVariantId && (
@@ -621,13 +815,72 @@ function TicketContent({
                                                 {item.variants?.find((v: any) => v.id === item.selectedVariantId)?.name}
                                             </div>
                                         )}
+
+                                        {/* NOTES EDITING UI (Review Mode Only) */}
+                                        {!isReceipt && (
+                                            <div className="mt-1">
+                                                {editingItemId === item.cartId ? (
+                                                    <div className="space-y-2 mt-1">
+                                                        <Textarea
+                                                            value={tempNote}
+                                                            onChange={(e) => setTempNote(e.target.value)}
+                                                            className="min-h-[50px] text-xs bg-white resize-none border-gray-300 focus-visible:ring-black"
+                                                            placeholder="Notas..."
+                                                            autoFocus
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        />
+                                                        <div className="flex justify-end gap-2">
+                                                            <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); cancelEdit(); }} className="h-6 w-6 p-0 rounded-full hover:bg-neutral-100">
+                                                                <X className="h-3 w-3" />
+                                                            </Button>
+                                                            <Button size="sm" onClick={(e) => { e.stopPropagation(); saveNote(item.cartId); }} className="h-6 w-6 p-0 rounded-full bg-black text-white hover:bg-black/90">
+                                                                <Check className="h-3 w-3" />
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div
+                                                        className="group/notes cursor-pointer"
+                                                        onClick={(e) => { e.stopPropagation(); startEditing(item.cartId, item.notes || ""); }}
+                                                    >
+                                                        {item.notes ? (
+                                                            <div className="flex items-start gap-1 text-xs italic text-gray-500 bg-gray-50 p-1 rounded hover:bg-gray-100 transition-colors">
+                                                                <span>"{item.notes}"</span>
+                                                                <Pencil className="h-3 w-3 opacity-50 text-black shrink-0 mt-0.5" />
+                                                            </div>
+                                                        ) : (
+                                                            <button
+                                                                className="text-[10px] text-black/60 hover:text-black mt-1 flex items-center gap-1 transition-colors font-medium opacity-0 group-hover:opacity-100"
+                                                            >
+                                                                <Pencil className="h-3 w-3" /> Agregar nota
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                        {isReceipt && item.notes && (
+                                            <div className="text-xs italic text-gray-400 mt-0.5">"{item.notes}"</div>
+                                        )}
                                     </div>
                                 </div>
 
-                                {/* Price */}
-                                <span className="font-mono font-medium text-gray-900 whitespace-nowrap pt-0.5 pl-4">
-                                    {formatCurrency(item.price * item.quantity)}
-                                </span>
+                                {/* Price & Delete */}
+                                <div className="flex flex-col items-end gap-1">
+                                    <span className="font-mono font-medium text-gray-900 whitespace-nowrap pt-0.5 pl-4">
+                                        {formatCurrency(item.price * item.quantity)}
+                                    </span>
+
+                                    {!isReceipt && (
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); removeItem && removeItem(item.cartId); }}
+                                            className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                                            title="Eliminar platillo"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         ))}
                     </div>

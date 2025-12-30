@@ -8,101 +8,88 @@ export interface CreateOrderParams {
     total: number
     orderType: 'delivery' | 'pickup'
     guestName?: string
-    guestEmail?: string   // New field
+    guestEmail?: string
     guestAddress?: string
     guestPhone?: string
     notes?: string
-    deliveryInstructions?: string // New field
+    deliveryInstructions?: string
+    deviceFingerprint?: string
+    deviceInfo?: any
 }
 
-// Enhanced Order Service with relational tables
 export const OrderService = {
     async createOrder(order: CreateOrderParams) {
         try {
-            // DEBUG: Check Auth Context
-            const { data: authDebug } = await supabase.rpc('debug_auth_context')
-            console.log('Auth context:', authDebug)
-
-            // 1. Prepare Order Data
-            const orderType = order.orderType;
+            // Prepare data for RPC (snake_case expected by SQL function)
             const orderData = {
-                guest_name: order.guestName || null,
-                guest_email: order.guestEmail || null,
-                guest_phone: order.guestPhone || null,
-                order_type: orderType,
-                delivery_address: orderType === 'delivery' ? order.guestAddress : null,
-                delivery_instructions: order.deliveryInstructions || null, // Map new field
-                subtotal: 0, // Calculated by trigger/RPC usually, but passing 0 for now
-                tax_amount: 0,
+                user_id: order.userId || null,
+                guest_name: order.guestName,
+                guest_email: order.guestEmail,
+                guest_phone: order.guestPhone,
+                order_type: order.orderType,
+                delivery_address: order.guestAddress,
+                delivery_instructions: order.deliveryInstructions,
+                notes: order.notes,
+                total: order.total,
+                // Default values for fields handled by RPC defaults/coalesce if missing
+                subtotal: order.total, // Assuming total is all inclusive for now, or calculate if needed
                 delivery_fee: 0,
-                // If tip is added later, map it here
+                tax_amount: 0,
                 tip_amount: 0,
-                total: order.total, // Pass the total from frontend 
-                payment_method: 'cash', // Default or from params
-                notes: order.notes || ''
-            };
-
-            // Add user_id ONLY if valid
-            // Add user_id ONLY if valid
-            // Check for valid UUID (simple check) or just passed value
-            const validUserId = (order.userId && order.userId !== 'demo-user') ? order.userId : null;
-            if (validUserId) {
-                (orderData as any).user_id = validUserId;
+                payment_method: 'cash' // Default or passed param if available
             }
 
-            // 2. Prepare Items Data
             const itemsData = order.items.map(item => ({
                 product_id: item.id,
                 variant_id: item.selectedVariantId || null,
                 quantity: item.quantity,
                 unit_price: item.price,
-                subtotal: item.price * item.quantity,
-                notes: item.notes || null
-            }));
+                subtotal: item.quantity * item.price,
+                notes: item.notes
+            }))
 
-            console.log("🚀 Sending create_complete_order:", { orderData, itemsData });
+            // Call the RPC function (Atomic Transaction)
+            const { data, error } = await supabase.rpc('create_complete_order', {
+                p_order_data: orderData,
+                p_items: itemsData
+            })
 
-            // 3. Call Atomic RPC
-            const { data: result, error: rpcError } = await (supabase as any)
-                .rpc('create_complete_order', {
-                    p_order_data: orderData,
-                    p_items: itemsData
-                });
-
-            if (rpcError) throw rpcError;
-
-            console.log('Order creation result:', result);
-
-            if (!result || !result.success) {
-                throw new Error(result?.error || 'Error creando orden completa');
+            if (error) {
+                console.error("Supabase RPC Order Error:", error)
+                throw error
             }
 
-            const { order_id: orderId, order_number: orderNumber } = result;
+            // Start Fix: Cast data to expected return type
+            const result = data as { success: boolean; error?: string; order_id: string; order_number: string } | null
+
+            if (!result || !result.success) {
+                throw new Error(result?.error || "Error creating order via RPC")
+            }
 
             return {
-                success: true,
-                orderId,
-                orderNumber,
-                data: result
-            };
+                orderId: result.order_id,
+                orderNumber: result.order_number
+            }
+            // End Fix
 
-        } catch (error: any) {
-            console.error('Order creation failed:', error);
-            throw error;
+        } catch (error) {
+            console.error("Create Order Error:", error)
+            throw error
         }
     },
+
     async hasActiveOrder(userId: string) {
         try {
             const { data, error } = await supabase
                 .from('orders')
                 .select('id, status, created_at')
                 .eq('user_id', userId)
-                .in('status', ['pending', 'accepted', 'preparing', 'ready_for_pickup', 'out_for_delivery'])
+                .in('status', ['pending', 'confirmed', 'preparing', 'out_for_delivery'])
                 .order('created_at', { ascending: false })
                 .limit(1)
-                .single()
+                .maybeSingle() // ✅ Cambiar single() por maybeSingle()
 
-            if (error && error.code !== 'PGRST116') {
+            if (error) {
                 console.error("Error checking active order:", error)
                 return false
             }
@@ -111,6 +98,78 @@ export const OrderService = {
         } catch (error) {
             console.error("Failed to check active order", error)
             return false
+        }
+    },
+
+    async getActiveOrderDetails(userId: string) {
+        try {
+            const { data, error } = await supabase
+                .from('orders')
+                .select(`
+                    *,
+                    order_items (
+                        *,
+                        products (name, image_url),
+                        product_variants (name)
+                    )
+                `)
+                .eq('user_id', userId)
+                .in('status', ['pending', 'confirmed', 'preparing', 'out_for_delivery'])
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle()
+
+            if (error) {
+                console.error("Failed to fetch active order details:", error)
+                return null
+            }
+
+            return data
+        } catch (error) {
+            console.error("Failed to fetch active order details", error)
+            return null
+        }
+    },
+
+    // Método adicional para obtener orden por ID 
+    async getOrderById(orderId: string) {
+        try {
+            const { data, error } = await supabase
+                .from('orders')
+                .select('*')
+                .eq('id', orderId)
+                .maybeSingle()
+
+            if (error) {
+                console.error("Error fetching order:", error)
+                return null
+            }
+
+            return data
+        } catch (error) {
+            console.error("Failed to fetch order", error)
+            return null
+        }
+    },
+
+    // Si tienes un método para obtener el status de una orden
+    async getOrderStatus(orderId: string) {
+        try {
+            // Use RPC to bypass RLS
+            const { data: rpcData, error } = await supabase.rpc('get_public_order_v1', {
+                p_order_id: orderId
+            })
+
+            if (error) {
+                console.error("Error fetching order status:", error)
+                return null
+            }
+
+            const data = rpcData as { success: boolean; order?: { status: string } } | null
+            return data?.order?.status || null
+        } catch (error) {
+            console.error("Failed to fetch order status", error)
+            return null
         }
     },
 
@@ -125,6 +184,52 @@ export const OrderService = {
         } catch (error) {
             console.error("Failed to fetch public order:", error)
             return { success: false, error: 'Network or server error' }
+        }
+    },
+
+    // Retrieve active guest order by device fingerprint
+    async getActiveGuestOrder(deviceFingerprint: string) {
+        try {
+            const { data, error } = await (supabase as any)
+                .rpc('get_active_order_by_device', {
+                    p_device_fingerprint: deviceFingerprint,
+                    p_guest_email: null,
+                    p_guest_phone: null
+                })
+
+            if (error) throw error
+
+            if (data?.success && data.order) {
+                return data.order
+            }
+            return null
+        } catch (error) {
+            console.error("Failed to check active guest order:", error)
+            return null
+        }
+    },
+
+    // Método helper para buscar órdenes de invitados por email
+    async getGuestOrdersByEmail(email: string) {
+        try {
+            const { data, error } = await supabase
+                .from('orders')
+                .select(`
+                    *,
+                    order_items (
+                        *,
+                        products (name, image_url),
+                        product_variants (name)
+                    )
+                `)
+                .eq('guest_email', email)
+                .order('created_at', { ascending: false })
+
+            if (error) throw error
+            return data || []
+        } catch (error) {
+            console.error("Failed to fetch guest orders:", error)
+            return []
         }
     }
 }

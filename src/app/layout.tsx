@@ -7,6 +7,9 @@ import { CartSheet } from "@/components/features/cart/CartSheet";
 import { OrderTicket } from "@/components/features/cart/OrderTicket";
 import { AuthModal } from "@/components/features/auth/AuthModal";
 import { OnboardingWizard } from "@/components/features/auth/OnboardingWizard";
+import { GuestSessionManager } from "@/components/features/auth/GuestSessionManager";
+import { OrderTracker } from "@/components/features/cart/OrderTracker";
+import { NotificationListener } from "@/components/features/notifications/NotificationListener";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -58,6 +61,9 @@ export default function RootLayout({
         <CartSheet />
         <AuthModal />
         <OnboardingWizard />
+        <GuestSessionManager />
+        <OrderTracker />
+        <NotificationListener />
       </body>
     </html>
   );
