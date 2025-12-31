@@ -95,10 +95,12 @@ export function FloatingNavbar() {
 import { User } from "lucide-react"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useAuth } from "@/lib/hooks/use-auth"
+import { usePermissions } from "@/hooks/usePermissions"
 
 function AuthButton({ scrolled }: { scrolled: boolean }) {
     const { user, openAuthModal } = useAuthStore()
     const { signOut } = useAuth()
+    const { canAccessModule } = usePermissions()
 
     return (
         <>
@@ -120,7 +122,7 @@ function AuthButton({ scrolled }: { scrolled: boolean }) {
 
             {user ? (
                 <div className="flex items-center gap-2">
-                    {(user.role === 'admin' || user.role === 'super_admin') && (
+                    {canAccessModule('dashboard') && (
                         <Link
                             href="/admin"
                             className="group relative inline-flex items-center justify-center p-[1px] rounded-full overflow-hidden mr-2"

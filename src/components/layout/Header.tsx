@@ -3,6 +3,8 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
+import { usePermissions } from "@/hooks/usePermissions"
+import { LayoutDashboard } from "lucide-react"
 
 export function HeaderSimple() {
     const [isScrolled, setIsScrolled] = React.useState(false)
@@ -24,7 +26,7 @@ export function HeaderSimple() {
                     : "bg-transparent"
             )}
         >
-            <div className="container px-6 flex items-center justify-center">
+            <div className="container px-6 flex items-center justify-between">
                 <Link
                     href="/"
                     className={cn(
@@ -34,7 +36,35 @@ export function HeaderSimple() {
                 >
                     Rajma
                 </Link>
+
+                <DashboardLink isScrolled={isScrolled} />
             </div>
         </header>
     )
+}
+
+function DashboardLink({ isScrolled }: { isScrolled: boolean }) {
+    const { canAccessModule, loading } = usePermissions()
+
+    // Don't show anything while loading to avoid flickering
+    if (loading) return null
+
+    if (canAccessModule('dashboard')) {
+        return (
+            <Link
+                href="/admin"
+                className={cn(
+                    "flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-full transition-colors",
+                    isScrolled
+                        ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                        : "bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm"
+                )}
+            >
+                <LayoutDashboard size={16} />
+                Dashboard
+            </Link>
+        )
+    }
+
+    return null
 }

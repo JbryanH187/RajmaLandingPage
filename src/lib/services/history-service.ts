@@ -82,8 +82,10 @@ export const HistoryService = {
                 totalPages: Math.ceil((result.total_orders || 0) / limit)
             }
 
-        } catch (error) {
-            console.error('Error fetching user orders:', error)
+        } catch (error: any) {
+            if (error.name !== 'AbortError' && !error.message?.includes('AbortError')) {
+                console.error('Error fetching user orders:', error)
+            }
             throw error
         }
     },
@@ -102,8 +104,10 @@ export const HistoryService = {
 
             return data as UserStats
 
-        } catch (error) {
-            console.error('Error fetching user stats:', error)
+        } catch (error: any) {
+            if (error.name !== 'AbortError' && !error.message?.includes('AbortError')) {
+                console.error('Error fetching user stats:', error)
+            }
             throw error
         }
     },
@@ -124,8 +128,10 @@ export const HistoryService = {
 
             return data
 
-        } catch (error) {
-            console.error('Error fetching order details:', error)
+        } catch (error: any) {
+            if (error.name !== 'AbortError' && !error.message?.includes('AbortError')) {
+                console.error('Error fetching order details:', error)
+            }
             throw error
         }
     }

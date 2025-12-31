@@ -45,11 +45,18 @@ export async function middleware(request: NextRequest) {
         // Check Profile Role
         const { data: profile } = await supabase
             .from('profiles')
-            .select('role')
+            .select(`
+                role:roles (
+                    name
+                )
+            `)
             .eq('id', session.user.id)
             .single()
 
-        if (!profile || (profile.role !== 'admin' && profile.role !== 'super_admin')) {
+        // @ts-ignore - Supabase types might not be perfectly inferred here without full DB types
+        const userRole = profile?.role?.name
+
+        if (!userRole || (userRole !== 'admin' && userRole !== 'super_admin')) {
             // Redirect unauthorized users to home with error
             return NextResponse.redirect(new URL('/?error=unauthorized', request.url))
         }

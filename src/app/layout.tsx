@@ -10,6 +10,7 @@ import { OnboardingWizard } from "@/components/features/auth/OnboardingWizard";
 import { GuestSessionManager } from "@/components/features/auth/GuestSessionManager";
 import { OrderTracker } from "@/components/features/cart/OrderTracker";
 import { NotificationListener } from "@/components/features/notifications/NotificationListener";
+import { PermissionProvider } from "@/hooks/usePermissions";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -52,18 +53,20 @@ export default function RootLayout({
   return (
     <html lang="es" className="scroll-smooth" suppressHydrationWarning>
       <body className={`${inter.variable} ${playfair.variable} antialiased bg-background text-foreground min-h-screen font-sans`}>
-        {children}
-        <ActiveOrderButton />
-        <Toaster position="top-center" richColors />
-        <div className="z-[60] relative">
-          <OrderTicket />
-        </div>
-        <CartSheet />
-        <AuthModal />
-        <OnboardingWizard />
-        <GuestSessionManager />
-        <OrderTracker />
-        <NotificationListener />
+        <PermissionProvider>
+          {children}
+          <ActiveOrderButton />
+          <Toaster position="top-center" richColors />
+          <div className="z-[60] relative">
+            <OrderTicket />
+          </div>
+          <CartSheet />
+          <AuthModal />
+          <OnboardingWizard />
+          <GuestSessionManager />
+          <OrderTracker />
+          <NotificationListener />
+        </PermissionProvider>
       </body>
     </html>
   );

@@ -76,6 +76,46 @@ export async function PATCH(request: Request) {
         if (body.phone !== undefined) updates.phone = body.phone
         if (body.default_address !== undefined) updates.default_address = body.default_address
 
+        // Check if profile exists (to safely handle missing profiles from failed triggers)
+        const { data: existingProfile } = await supabase
+            .from('profiles')
+            .select('id, role_id')
+            .eq('id', user.id)
+            .single()
+
+        // If profile doesn't exist, we MUST provide mandatory role fields for the INSERT
+        if (!existingProfile) {
+            let roleId: string | null = null;
+
+            // 1. Try to find existing role
+            const { data: roleData } = await supabase
+                .from('roles')
+                .select('id')
+                .eq('name', 'customer')
+                .single()
+
+            if (roleData) {
+                roleId = roleData.id
+            } else {
+                // 2. Aggressive Self-Healing: Create role if missing
+                console.warn('[API/Profile] Customer role missing. Creating it now...')
+                const { data: newRole, error: roleError } = await supabase
+                    .from('roles')
+                    .insert({ name: 'customer', description: 'System customer' })
+                    .select('id')
+                    .single()
+
+                if (newRole) roleId = newRole.id
+                if (roleError) console.error('[API/Profile] Error creating role:', roleError)
+            }
+
+            if (roleId) {
+                updates.role_id = roleId
+            } else {
+                throw new Error("Critical: Could not find or create 'customer' role.")
+            }
+        }
+
         // Perform Upsert
         const { data, error } = await supabase
             .from('profiles')

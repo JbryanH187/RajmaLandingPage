@@ -17,6 +17,8 @@ export function useAuth() {
                 .eq('id', sessionUser.id)
                 .single()
 
+            console.log('[useAuth] fetchProfile result:', { profile, sessionUser_id: sessionUser.id })
+
             setUser({
                 id: sessionUser.id,
                 email: sessionUser.email!,
@@ -59,12 +61,15 @@ export function useAuth() {
 
     const signInWithGoogle = async () => {
         if (!supabase) return;
-        await supabase.auth.signInWithOAuth({
+        console.log('[useAuth] Initiating Google Sign In')
+        const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
                 redirectTo: `${window.location.origin}/auth/callback`
             }
         })
+        if (error) console.error('[useAuth] Google Sign In Error:', error)
+        if (data) console.log('[useAuth] Google Sign In Data:', data)
     }
 
     const signOut = async () => {

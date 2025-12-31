@@ -99,21 +99,33 @@ export function OrderHistoryList({ userId, email }: OrderHistoryListProps) {
                 email
             }
 
-            await request(
-                (signal) => HistoryService.getUserOrders(queryParams, signal),
-                {
-                    timeout: 10000,
-                    onSuccess: (data) => {
-                        setOrders(data.orders)
-                        setLoading(false)
-                    },
-                    onError: (err) => {
-                        console.error("Failed to load orders", err)
-                        setError("No se pudo cargar el historial. Intenta recargar.")
-                        setLoading(false)
+            try {
+                await request(
+                    (signal) => HistoryService.getUserOrders(queryParams, signal),
+                    {
+                        timeout: 10000,
+                        onSuccess: (data) => {
+                            setOrders(data.orders)
+                            setLoading(false)
+                        },
+                        onError: (err: any) => {
+                            // Ignore abort errors
+                            if (err.name === 'AbortError' || err.message === 'Request was cancelled' || err.message?.includes('aborted')) {
+                                return
+                            }
+
+                            console.error("Failed to load orders", err)
+                            setError("No se pudo cargar el historial. Intenta recargar.")
+                            setLoading(false)
+                        }
                     }
+                )
+            } catch (err: any) {
+                // Silently ignore abort errors
+                if (err.name !== 'AbortError' && !err.message?.includes('aborted') && err.message !== 'Request was cancelled') {
+                    console.error("Unhandled error in loadOrders:", err)
                 }
-            )
+            }
         }
 
         loadOrders()
@@ -124,8 +136,7 @@ export function OrderHistoryList({ userId, email }: OrderHistoryListProps) {
         }
     }, [userId, email, request, abort])
 
-    // Removed standalone loadOrders to avoid race conditions with useEffect
-    const loadOrders = () => { /* no-op or trigger re-fetch if needed */ }
+
 
     const handleViewDetails = (id: string) => {
         setSelectedOrderId(id)
