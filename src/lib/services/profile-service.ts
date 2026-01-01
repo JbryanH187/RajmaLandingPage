@@ -8,6 +8,11 @@ export interface ProfileUpdate {
 }
 
 class ProfileService {
+    private async getAccessToken(): Promise<string | null> {
+        const { data: { session } } = await supabase.auth.getSession()
+        return session?.access_token || null
+    }
+
     async getCurrentUserProfile() {
         if (!supabase) throw new Error('Supabase not configured')
 
@@ -25,10 +30,17 @@ class ProfileService {
     }
 
     async updateMyProfile(updates: ProfileUpdate) {
+        const accessToken = await this.getAccessToken()
+
+        if (!accessToken) {
+            throw new Error('No authenticated session')
+        }
+
         const response = await fetch('/api/profile', {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`,
             },
             body: JSON.stringify(updates),
         })
@@ -45,3 +57,4 @@ class ProfileService {
 }
 
 export const profileService = new ProfileService()
+

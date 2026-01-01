@@ -10,7 +10,6 @@ export function AuthListener() {
     // Refs to prevent duplicate fetches
     const fetchingRef = useRef(false)
     const lastFetchedUserId = useRef<string | null>(null)
-    const sessionInitialized = useRef(false)
 
     useEffect(() => {
         if (!supabase || !isHydrated) return
@@ -75,55 +74,33 @@ export function AuthListener() {
             }
         }
 
-        // Initialize session only once
-        const initializeAuth = async () => {
-            if (sessionInitialized.current) return
-
-            try {
-                const { data: { session }, error } = await supabase.auth.getSession()
-
-                if (error) {
-                    console.error('[AuthListener] getSession error:', error)
-                    if (mounted) setLoading(false)
-                    return
-                }
-
-                sessionInitialized.current = true
-
-                if (session?.user && mounted) {
-                    await fetchProfile(session.user)
-                } else if (mounted) {
-                    setUser(null)
-                    setLoading(false)
-                }
-            } catch (error) {
-                console.error('[AuthListener] Init error:', error)
-                if (mounted) setLoading(false)
-            }
-        }
-
-        initializeAuth()
-
-        // Listen for auth changes (but ignore duplicate INITIAL_SESSION)
+        // Using ONLY onAuthStateChange - getSession can hang with @supabase/ssr
+        // The INITIAL_SESSION event fires automatically on subscription with the current session
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
                 if (!mounted) return
 
-                // Ignore INITIAL_SESSION if we already initialized
-                if (event === 'INITIAL_SESSION' && sessionInitialized.current) {
-                    console.log('[AuthListener] Ignoring duplicate INITIAL_SESSION')
-                    return
-                }
-
                 console.log("[AuthListener] Auth event:", event)
 
-                if (session?.user) {
-                    await fetchProfile(session.user)
+                if (event === 'INITIAL_SESSION') {
+                    // This is the initial load - process whatever session exists (or null)
+                    if (session?.user) {
+                        await fetchProfile(session.user)
+                    } else {
+                        setUser(null)
+                        setLoading(false)
+                    }
+                } else if (event === 'SIGNED_IN') {
+                    if (session?.user) {
+                        await fetchProfile(session.user)
+                    }
                 } else if (event === 'SIGNED_OUT') {
                     setUser(null)
                     lastFetchedUserId.current = null
-                    sessionInitialized.current = false
                     setLoading(false)
+                } else if (event === 'TOKEN_REFRESHED') {
+                    // Optionally refresh profile on token refresh
+                    console.log('[AuthListener] Token refreshed')
                 }
             }
         )

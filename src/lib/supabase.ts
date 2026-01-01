@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 import type { Database } from './database.types'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -8,12 +8,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error('Missing Supabase environment variables')
 }
 
-// Use createClient directly instead of createBrowserClient from @supabase/ssr
-// This avoids the hanging getSession() issue
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-    auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true
-    }
-})
+// Use createBrowserClient from @supabase/ssr for cookie-based auth
+// This ensures middleware and API routes can read the session
+export const supabase = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey)

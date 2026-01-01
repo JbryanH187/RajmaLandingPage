@@ -1,9 +1,31 @@
+import { createClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 
-// Helper to get Supabase Server Client
-async function getSupabaseServer() {
+// Helper to get Supabase Server Client - supports both cookie and bearer token auth
+async function getSupabaseServer(request?: Request) {
+    const headerStore = await headers()
+    const authHeader = headerStore.get('authorization')
+
+    // If Bearer token is provided, use it directly
+    if (authHeader?.startsWith('Bearer ')) {
+        const token = authHeader.replace('Bearer ', '')
+        const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                global: {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            }
+        )
+        return supabase
+    }
+
+    // Fallback to cookie-based auth
     const cookieStore = await cookies()
     return createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
