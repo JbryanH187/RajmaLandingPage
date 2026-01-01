@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Utensils, Users, ClipboardList, FileText, Settings, ChefHat } from "lucide-react"
+import { LayoutDashboard, Utensils, Users, ClipboardList, FileText, Settings, ChefHat, History } from "lucide-react"
 import { usePermissions } from "@/hooks/usePermissions"
 
 export function AdminMobileNav() {
@@ -16,6 +16,7 @@ export function AdminMobileNav() {
             case 'users': return <Users size={20} />
             case 'reports': return <FileText size={20} />
             case 'settings': return <Settings size={20} />
+            case 'history': return <History size={20} />
             case 'kds': return <ChefHat size={20} />
             default: return <LayoutDashboard size={20} />
         }
@@ -23,7 +24,9 @@ export function AdminMobileNav() {
 
     // Filter to limit bottom nav items to key modules if too many?
     // For now, take first 4-5 or all.
-    const displayModules = modules.slice(0, 5)
+    const displayModules = modules
+        .filter(m => m.name !== 'dashboard')
+        .slice(0, 5)
 
     return (
         <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 pb-safe">

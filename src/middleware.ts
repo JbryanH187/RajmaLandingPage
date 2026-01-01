@@ -42,19 +42,17 @@ export async function middleware(request: NextRequest) {
             return NextResponse.redirect(new URL('/?login=true', request.url))
         }
 
-        // Check Profile Role
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select(`
-                role:roles (
-                    name
-                )
-            `)
-            .eq('id', session.user.id)
-            .single()
+        // Check Profile Role via RPC (same as frontend)
+        // We use the RPC to ensure consistent logic with the UI and avoid RLS/Schema issues on raw tables
+        const { data, error } = await (supabase as any)
+            .rpc('get_user_auth_info', { p_user_id: session.user.id })
 
-        // @ts-ignore - Supabase types might not be perfectly inferred here without full DB types
-        const userRole = profile?.role?.name
+        if (error) {
+            console.error('Middleware RPC Error:', error)
+            return NextResponse.redirect(new URL('/?error=server_error', request.url))
+        }
+
+        const userRole = data?.user?.role?.name
 
         if (!userRole || (userRole !== 'admin' && userRole !== 'super_admin')) {
             // Redirect unauthorized users to home with error
@@ -66,5 +64,14 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/admin/:path*'],
+    matcher: [
+        /*
+         * Match all request paths except for the ones starting with:
+         * - _next/static (static files)
+         * - _next/image (image optimization files)
+         * - favicon.ico (favicon file)
+         * - public folder
+         */
+        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    ],
 }

@@ -4,60 +4,11 @@ import { useAuthStore } from '@/lib/store/auth-store'
 import { supabase } from '@/lib/supabase'
 
 export function useAuth() {
-    const { user, isLoading, setUser, setLoading } = useAuthStore()
+    // We added isHydrated to store
+    const { user, isLoading, setUser, setLoading, isHydrated } = useAuthStore()
 
-    useEffect(() => {
-        if (!supabase) return;
-
-        const fetchProfile = async (sessionUser: any) => {
-            if (!supabase) return;
-            const { data: profile } = await (supabase
-                .from('profiles') as any)
-                .select('*')
-                .eq('id', sessionUser.id)
-                .single()
-
-            console.log('[useAuth] fetchProfile result:', { profile, sessionUser_id: sessionUser.id })
-
-            setUser({
-                id: sessionUser.id,
-                email: sessionUser.email!,
-                role: profile?.role || 'customer',
-                created_at: sessionUser.created_at,
-                avatar_url: profile?.avatar_url || sessionUser.user_metadata?.avatar_url,
-                full_name: profile?.full_name || sessionUser.user_metadata?.full_name,
-                phone: profile?.phone,
-                default_address: profile?.default_address
-            })
-            setLoading(false)
-        }
-
-        // Check active session
-        const initSession = async () => {
-            if (!supabase) return;
-            const { data: { session } } = await supabase.auth.getSession()
-            if (session?.user) {
-                await fetchProfile(session.user)
-            } else {
-                setUser(null)
-                setLoading(false)
-            }
-        }
-
-        initSession()
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-            if (session?.user) {
-                // Ensure checking profile on auth change too
-                await fetchProfile(session.user)
-            } else {
-                setUser(null)
-                setLoading(false)
-            }
-        })
-
-        return () => subscription.unsubscribe()
-    }, [])
+    // Side effects are now handled by <AuthListener /> in layout.tsx
+    // This hook is now purely for accessing state and actions.
 
     const signInWithGoogle = async () => {
         if (!supabase) return;

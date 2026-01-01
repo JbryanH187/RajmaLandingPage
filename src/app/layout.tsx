@@ -11,6 +11,7 @@ import { GuestSessionManager } from "@/components/features/auth/GuestSessionMana
 import { OrderTracker } from "@/components/features/cart/OrderTracker";
 import { NotificationListener } from "@/components/features/notifications/NotificationListener";
 import { PermissionProvider } from "@/hooks/usePermissions";
+import { AuthListener } from "@/components/features/auth/AuthListener";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -62,6 +63,7 @@ export default function RootLayout({
           </div>
           <CartSheet />
           <AuthModal />
+          <AuthListener />
           <OnboardingWizard />
           <GuestSessionManager />
           <OrderTracker />

@@ -100,31 +100,24 @@ export function OrderHistoryList({ userId, email }: OrderHistoryListProps) {
             }
 
             try {
-                await request(
-                    (signal) => HistoryService.getUserOrders(queryParams, signal),
-                    {
-                        timeout: 10000,
-                        onSuccess: (data) => {
-                            setOrders(data.orders)
-                            setLoading(false)
-                        },
-                        onError: (err: any) => {
-                            // Ignore abort errors
-                            if (err.name === 'AbortError' || err.message === 'Request was cancelled' || err.message?.includes('aborted')) {
-                                return
-                            }
-
-                            console.error("Failed to load orders", err)
-                            setError("No se pudo cargar el historial. Intenta recargar.")
-                            setLoading(false)
-                        }
-                    }
+                const data = await request(
+                    (signal) => HistoryService.getUserOrders(queryParams, signal)
                 )
-            } catch (err: any) {
-                // Silently ignore abort errors
-                if (err.name !== 'AbortError' && !err.message?.includes('aborted') && err.message !== 'Request was cancelled') {
-                    console.error("Unhandled error in loadOrders:", err)
+
+                // Only update state if we got data (not aborted)
+                if (data) {
+                    setOrders(data.orders)
                 }
+            } catch (err: any) {
+                // Ignore abort errors
+                if (err.name === 'AbortError' || err.message === 'Request was cancelled' || err.message?.includes('aborted') || err.message === 'Component unmounted') {
+                    return
+                }
+
+                console.error("Failed to load orders", err)
+                setError("No se pudo cargar el historial. Intenta recargar.")
+            } finally {
+                setLoading(false)
             }
         }
 

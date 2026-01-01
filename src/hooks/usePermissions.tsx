@@ -66,6 +66,14 @@ export function PermissionProvider({ children }: { children: ReactNode }) {
             }
 
             const uid = session.user.id
+
+            // Optimization: If we already have data for this user, skip fetch
+            if (userInfo && userId === uid && permissions.length > 0) {
+                console.log('[usePermissions] Data already loaded, skipping fetch.')
+                setLoading(false)
+                return
+            }
+
             setUserId(uid)
 
             // Unified RPC Call
@@ -82,7 +90,17 @@ export function PermissionProvider({ children }: { children: ReactNode }) {
 
             if (data) {
                 setUserInfo(data.user)
-                setPermissions(data.permissions || [])
+                // Normalize permissions if they come as arrays [resource, action, granted]
+                const rawPermissions = data.permissions || []
+                const normalizedPermissions = Array.isArray(rawPermissions[0])
+                    ? rawPermissions.map((p: any) => ({
+                        resource: p[0],
+                        action: p[1],
+                        granted: p[2]
+                    }))
+                    : rawPermissions
+
+                setPermissions(normalizedPermissions)
                 setModules(data.modules || [])
             } else {
                 // Fallback or empty state if no data returned

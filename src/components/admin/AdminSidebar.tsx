@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Utensils, Users, LogOut, ClipboardList, ChefHat, Settings, FileText } from "lucide-react"
+import { LayoutDashboard, Utensils, Users, LogOut, ClipboardList, ChefHat, Settings, FileText, History } from "lucide-react"
 import { usePermissions } from "@/hooks/usePermissions"
 
 export function AdminSidebar({ user }: { user: any }) {
@@ -18,6 +18,7 @@ export function AdminSidebar({ user }: { user: any }) {
             case 'users': return <Users size={20} />
             case 'reports': return <FileText size={20} />
             case 'settings': return <Settings size={20} />
+            case 'history': return <History size={20} />
             case 'kds': return <ChefHat size={20} />
             default: return <LayoutDashboard size={20} />
         }
@@ -47,19 +48,27 @@ export function AdminSidebar({ user }: { user: any }) {
                             ))}
                         </div>
                     ) : (
-                        modules.map(module => (
-                            <Link
-                                key={module.name}
-                                href={module.route}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${pathname === module.route
-                                    ? 'bg-red-600 text-white shadow-lg shadow-red-900/20'
-                                    : 'hover:bg-white/10 hover:text-red-400 text-gray-300'
-                                    }`}
-                            >
-                                {getIcon(module.name)}
-                                <span className="font-medium text-sm">{module.display_name}</span>
-                            </Link>
-                        ))
+                        modules.length > 0 ? (
+                            modules
+                                .filter(module => module.name !== 'dashboard')
+                                .map(module => (
+                                    <Link
+                                        key={module.name}
+                                        href={module.route}
+                                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${pathname === module.route
+                                            ? 'bg-red-600 text-white shadow-lg shadow-red-900/20'
+                                            : 'hover:bg-white/10 hover:text-red-400 text-gray-300'
+                                            }`}
+                                    >
+                                        {getIcon(module.name)}
+                                        <span className="font-medium text-sm">{module.display_name}</span>
+                                    </Link>
+                                ))
+                        ) : (
+                            <div className="px-4 py-3 text-sm text-gray-500 text-center border border-dashed border-gray-700 rounded-xl">
+                                No hay módulos disponibles
+                            </div>
+                        )
                     )}
                 </nav>
             </div>

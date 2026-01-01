@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useForm, useFieldArray, SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
+// import { createClientComponentClient } from "@supabase/auth-helpers-nextjs" // Removed - unused
 import { Loader2, Plus, Trash2, Upload, Image as ImageIcon } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
@@ -60,6 +61,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
 
     useEffect(() => {
         const fetchCategories = async () => {
+            // Fetch categories should also use the client
             const { data, error } = await supabase
                 .from('categories')
                 .select('*')
@@ -75,6 +77,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
         fetchCategories()
     }, [])
 
+    // Use the singleton which is a browser client
     // const supabase = createClientComponentClient()
 
     const form = useForm<ProductFormValues>({
@@ -108,6 +111,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     }
 
     const onSubmit: SubmitHandler<ProductFormValues> = async (data) => {
+        console.log("🚀 onSubmit called", data)
         setIsLoading(true)
         if (!supabase) {
             toast.error("Error: Supabase no está configurado")
@@ -138,11 +142,14 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                 if (error) throw error
             } else {
                 // INSERT
+                console.log("Attempting INSERT with:", productData)
                 const { data: newPro, error } = await (supabase
                     .from('products') as any)
                     .insert([productData])
                     .select()
                     .single()
+
+                console.log("INSERT Result:", { newPro, error })
 
                 if (error) throw error
                 productId = newPro.id
