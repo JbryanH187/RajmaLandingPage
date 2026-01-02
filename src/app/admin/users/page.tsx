@@ -3,25 +3,20 @@
 import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
 import { usePermissions } from "@/hooks/usePermissions"
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
-import { Users, Shield, Edit2, Trash2, Check, X } from "lucide-react"
+import { Users, Shield, Search } from "lucide-react"
 import { toast } from "sonner"
+import { AdminShell } from "@/components/admin/AdminShell"
+import { useTheme } from "@/lib/hooks/useTheme"
+import { Input } from "@/components/ui/input"
 
 export default function UsersPage() {
-    return (
-        <ProtectedRoute module="users">
-            <UsersContent />
-        </ProtectedRoute>
-    )
-}
-
-function UsersContent() {
-    const { hasPermission, permissions } = usePermissions()
+    const { hasPermission } = usePermissions()
     const [users, setUsers] = useState<any[]>([])
     const [roles, setRoles] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
+    const [searchQuery, setSearchQuery] = useState("")
+    const { isDark } = useTheme()
 
-    // Check permissions
     const canManageRoles = hasPermission('roles', 'assign')
     const canManagePermissions = hasPermission('permissions', 'grant')
 
@@ -31,6 +26,7 @@ function UsersContent() {
     }, [])
 
     const fetchUsers = async () => {
+        setLoading(true)
         try {
             const { data, error } = await supabase
                 .from('profiles')
@@ -70,78 +66,131 @@ function UsersContent() {
         }
     }
 
-    if (loading) return <div className="p-8 text-center">Cargando usuarios...</div>
+    const filteredUsers = users.filter(user =>
+        user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.last_name?.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+
+    // Theme-aware classes
+    const cardBg = isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200 shadow-sm'
+    const headerBg = isDark ? 'bg-zinc-800/50' : 'bg-gray-50'
+    const textHead = isDark ? 'text-zinc-400' : 'text-gray-500'
+    const textMain = isDark ? 'text-white' : 'text-gray-900'
+    const textMuted = isDark ? 'text-zinc-500' : 'text-gray-400'
+    const rowHover = isDark ? 'hover:bg-zinc-800/50' : 'hover:bg-gray-50'
+    const inputBg = isDark ? 'bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500' : 'bg-white border-gray-200'
+    const selectBg = isDark ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-gray-50 border-gray-200'
+    const avatarBg = isDark ? 'bg-zinc-800 text-zinc-300' : 'bg-gray-100 text-gray-500'
+    const badgeBg = isDark ? 'bg-zinc-800 text-zinc-300' : 'bg-gray-100 text-gray-600'
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold flex items-center gap-3">
-                    <Users className="text-red-600" />
-                    Gestión de Usuarios
-                </h1>
-            </div>
+        <AdminShell onRefresh={fetchUsers} isRefreshing={loading}>
+            <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                        <h1 className={`text-3xl font-bold flex items-center gap-3 ${textMain}`}>
+                            <Users className="text-red-500" />
+                            Gestión de Usuarios
+                        </h1>
+                        <p className={textMuted}>{users.length} usuarios registrados</p>
+                    </div>
+                </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead className="bg-gray-50 border-b border-gray-100">
-                            <tr>
-                                <th className="p-4 font-semibold text-gray-600">Usuario</th>
-                                <th className="p-4 font-semibold text-gray-600">Email</th>
-                                <th className="p-4 font-semibold text-gray-600">Rol</th>
-                                <th className="p-4 font-semibold text-gray-600">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {users.map((user) => (
-                                <tr key={user.id} className="hover:bg-gray-50/50">
-                                    <td className="p-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold">
-                                                {user.email?.[0]?.toUpperCase() || 'U'}
-                                            </div>
-                                            <div>
-                                                <p className="font-medium text-gray-900">
-                                                    {user.first_name} {user.last_name}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="p-4 text-gray-500">{user.email}</td>
-                                    <td className="p-4">
-                                        {canManageRoles ? (
-                                            <select
-                                                value={user.role_id || ''}
-                                                onChange={(e) => handleRoleUpdate(user.id, e.target.value)}
-                                                className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20"
-                                            >
-                                                {roles.map(role => (
-                                                    <option key={role.id} value={role.id}>
-                                                        {role.name}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        ) : (
-                                            <span className="px-2 py-1 bg-gray-100 rounded-lg text-sm">
-                                                {user.roles?.name || 'Sin rol'}
-                                            </span>
-                                        )}
-                                    </td>
-                                    <td className="p-4">
-                                        <button
-                                            className="text-gray-400 hover:text-red-600 transition-colors"
-                                            title="Gestionar Permisos"
-                                            disabled={!canManagePermissions}
-                                        >
-                                            <Shield size={18} />
-                                        </button>
-                                    </td>
+                {/* Search Bar */}
+                <div className="relative max-w-md">
+                    <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${textMuted}`} />
+                    <Input
+                        placeholder="Buscar por nombre o email..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className={`pl-10 ${inputBg}`}
+                    />
+                </div>
+
+                {/* Users Table */}
+                <div className={`rounded-xl border overflow-hidden ${cardBg}`}>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead className={`border-b ${headerBg} ${isDark ? 'border-zinc-800' : 'border-gray-100'}`}>
+                                <tr>
+                                    <th className={`p-4 font-medium text-xs uppercase tracking-wider ${textHead}`}>Usuario</th>
+                                    <th className={`p-4 font-medium text-xs uppercase tracking-wider ${textHead}`}>Email</th>
+                                    <th className={`p-4 font-medium text-xs uppercase tracking-wider ${textHead}`}>Rol</th>
+                                    <th className={`p-4 font-medium text-xs uppercase tracking-wider ${textHead}`}>Acciones</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className={`divide-y ${isDark ? 'divide-zinc-800' : 'divide-gray-100'}`}>
+                                {loading ? (
+                                    <tr>
+                                        <td colSpan={4} className={`p-12 text-center ${textMuted}`}>
+                                            Cargando usuarios...
+                                        </td>
+                                    </tr>
+                                ) : filteredUsers.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={4} className={`p-12 text-center ${textMuted}`}>
+                                            No se encontraron usuarios.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    filteredUsers.map((user) => (
+                                        <tr key={user.id} className={`${rowHover} transition-colors`}>
+                                            <td className="p-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${avatarBg}`}>
+                                                        {user.email?.[0]?.toUpperCase() || 'U'}
+                                                    </div>
+                                                    <div>
+                                                        <p className={`font-medium ${textMain}`}>
+                                                            {user.first_name || ''} {user.last_name || ''}
+                                                        </p>
+                                                        {!user.first_name && !user.last_name && (
+                                                            <p className={textMuted}>Sin nombre</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className={`p-4 ${textMuted}`}>{user.email}</td>
+                                            <td className="p-4">
+                                                {canManageRoles ? (
+                                                    <select
+                                                        value={user.role_id || ''}
+                                                        onChange={(e) => handleRoleUpdate(user.id, e.target.value)}
+                                                        className={`rounded-lg px-3 py-1.5 text-sm border focus:outline-none focus:ring-2 focus:ring-red-500/20 ${selectBg}`}
+                                                    >
+                                                        {roles.map(role => (
+                                                            <option key={role.id} value={role.id}>
+                                                                {role.name}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                ) : (
+                                                    <span className={`px-2.5 py-1 rounded-lg text-sm ${badgeBg}`}>
+                                                        {user.roles?.name || 'Sin rol'}
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="p-4">
+                                                <button
+                                                    className={`p-2 rounded-lg transition-colors ${canManagePermissions
+                                                            ? isDark ? 'text-zinc-400 hover:text-white hover:bg-zinc-700' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-100'
+                                                            : 'text-gray-300 cursor-not-allowed'
+                                                        }`}
+                                                    title="Gestionar Permisos"
+                                                    disabled={!canManagePermissions}
+                                                >
+                                                    <Shield size={18} />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
+        </AdminShell>
     )
 }

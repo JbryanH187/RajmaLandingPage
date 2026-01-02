@@ -166,6 +166,25 @@
     scrollbar-width: none;
   }
 
+  /* Custom scrollbar for KDS */
+  .custom-scroll::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .custom-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scroll::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.5);
+    border-radius: 3px;
+  }
+
+  .custom-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.8);
+  }
+
   /* Premium Motion */
   .animate-reveal {
     animation: reveal 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;

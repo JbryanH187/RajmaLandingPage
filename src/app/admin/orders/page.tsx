@@ -1,167 +1,225 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { AdminService } from "@/lib/services/admin-service"
-import { AdminOrderCard } from "@/components/admin/orders/AdminOrderCard"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { toast } from "sonner"
-import { Loader2, RefreshCw } from "lucide-react"
+import { useState } from 'react'
+import { Bell, ChefHat, Truck, CheckCircle } from 'lucide-react'
+import { toast } from 'sonner'
+import {
+    OrderCard,
+    KDSColumn,
+    AIPlaceholder
+} from '@/components/kds'
+import { AdminShell } from '@/components/admin/AdminShell'
+import { useTheme } from '@/lib/hooks/useTheme'
+import { useOrdersRealtime } from '@/hooks/useOrdersRealtime'
+import { supabase } from '@/lib/supabase'
+import type { Order } from '@/types/orders'
 
-export default function AdminOrdersPage() {
-    const [orders, setOrders] = useState<any[]>([])
-    const [loading, setLoading] = useState(true)
-    const [activeTab, setActiveTab] = useState("active")
-
-    const fetchOrders = async () => {
-        try {
-            setLoading(true)
-            // Fetch 'all' and filter client-side for now to have smooth transitions, 
-            // or fetch by status if optimized.
-            const data = await AdminService.getOrders('all')
-            setOrders(data || [])
-        } catch (error) {
-            console.error("Error fetching orders:", error)
-            toast.error("Error al cargar pedidos")
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    // Initial Fetch & Realtime Subscription
-    useEffect(() => {
-        fetchOrders()
-
-        const subscription = AdminService.subscribeToNewOrders((newOrder) => {
-            toast.info(`Nuevo pedido: #${newOrder.order_number || 'ID'}`)
-            // Optimistic update or refetch
-            fetchOrders()
-        })
-
-        // Polling fallback every 30s
-        const interval = setInterval(fetchOrders, 30000)
-
-        return () => {
-            subscription.unsubscribe()
-            clearInterval(interval)
-        }
-    }, [])
-
-    const handleStatusChange = async (orderId: string, newStatus: string) => {
-        try {
-            // Optimistic Update
-            setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o))
-
-            await AdminService.updateOrderStatus(orderId, newStatus as any)
-            toast.success("Estado actualizado")
-        } catch (error) {
-            console.error("Update failed", error)
-            toast.error("Error al actualizar estado")
-            fetchOrders() // Revert
-        }
-    }
-
-    const handleViewDetails = (order: any) => {
-        // Todo: Open Modal
-        console.log("View details", order)
-    }
-
-    // Group Orders
-    const newOrders = orders.filter(o => o.status === 'pending')
-    const activeOrders = orders.filter(o => ['confirmed', 'preparing', 'ready'].includes(o.status))
-    const deliveryOrders = orders.filter(o => ['out_for_delivery', 'delivering'].includes(o.status))
-    const completedOrders = orders.filter(o => ['delivered', 'completed', 'cancelled'].includes(o.status))
-
-    return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Pedidos</h1>
-                    <p className="text-muted-foreground">Kitchen Display System (KDS)</p>
-                </div>
-                <button
-                    onClick={fetchOrders}
-                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                    title="Actualizar"
-                >
-                    {loading ? <Loader2 className="animate-spin" /> : <RefreshCw />}
-                </button>
-            </div>
-
-            <Tabs defaultValue="active" value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">
-                    <TabsTrigger value="new" className="relative">
-                        Nuevos
-                        {newOrders.length > 0 && (
-                            <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white text-xs rounded-full flex items-center justify-center">
-                                {newOrders.length}
-                            </span>
-                        )}
-                    </TabsTrigger>
-                    <TabsTrigger value="active">En Cocina</TabsTrigger>
-                    <TabsTrigger value="delivery">Reparto</TabsTrigger>
-                    <TabsTrigger value="completed">Historial</TabsTrigger>
-                </TabsList>
-
-                <div className="mt-6">
-                    <TabsContent value="new" className="space-y-4">
-                        {newOrders.map(order => (
-                            <AdminOrderCard
-                                key={order.id}
-                                order={order}
-                                onStatusChange={handleStatusChange}
-                                onViewDetails={handleViewDetails}
-                            />
-                        ))}
-                        {newOrders.length === 0 && <EmptyState message="No hay pedidos nuevos" />}
-                    </TabsContent>
-
-                    <TabsContent value="active" className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {activeOrders.map(order => (
-                            <AdminOrderCard
-                                key={order.id}
-                                order={order}
-                                onStatusChange={handleStatusChange}
-                                onViewDetails={handleViewDetails}
-                            />
-                        ))}
-                        {activeOrders.length === 0 && <EmptyState message="La cocina está libre" />}
-                    </TabsContent>
-
-                    <TabsContent value="delivery" className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {deliveryOrders.map(order => (
-                            <AdminOrderCard
-                                key={order.id}
-                                order={order}
-                                onStatusChange={handleStatusChange}
-                                onViewDetails={handleViewDetails}
-                            />
-                        ))}
-                        {deliveryOrders.length === 0 && <EmptyState message="No hay pedidos en ruta" />}
-                    </TabsContent>
-
-                    <TabsContent value="completed" className="space-y-4">
-                        {completedOrders.slice(0, 20).map(order => (
-                            <AdminOrderCard
-                                key={order.id}
-                                order={order}
-                                onStatusChange={handleStatusChange}
-                                onViewDetails={handleViewDetails}
-                            />
-                        ))}
-                    </TabsContent>
-                </div>
-            </Tabs>
-        </div>
-    )
+// Status flow for advancing orders
+const STATUS_FLOW: Record<string, string> = {
+    'pending': 'confirmed',
+    'confirmed': 'preparing',
+    'preparing': 'ready',
+    'ready': 'out_for_delivery',
+    'out_for_delivery': 'delivering',
+    'delivering': 'delivered',
 }
 
-function EmptyState({ message }: { message: string }) {
+export default function OrdersPage() {
+    const [aiModalOpen, setAiModalOpen] = useState(false)
+    const [aiModalTitle, setAiModalTitle] = useState('')
+    const { isDark } = useTheme()
+
+    // Fetch orders by category using the new hook
+    const { orders: newOrders, isLoading: loadingNew, refetch: refetchNew } = useOrdersRealtime({
+        statusCategory: 'new'
+    })
+    const { orders: activeOrders, isLoading: loadingActive, refetch: refetchActive } = useOrdersRealtime({
+        statusCategory: 'active'
+    })
+    const { orders: deliveryOrders, isLoading: loadingDelivery, refetch: refetchDelivery } = useOrdersRealtime({
+        statusCategory: 'delivery'
+    })
+    const { orders: completedOrders, isLoading: loadingCompleted, refetch: refetchCompleted } = useOrdersRealtime({
+        statusCategory: 'completed',
+        todayOnly: true
+    })
+
+    const isLoading = loadingNew || loadingActive || loadingDelivery || loadingCompleted
+
+    const handleRefresh = async () => {
+        await Promise.all([refetchNew(), refetchActive(), refetchDelivery(), refetchCompleted()])
+    }
+
+    // Advance order to next status
+    const handleAdvance = async (orderId: string, currentStatus: string) => {
+        const nextStatus = STATUS_FLOW[currentStatus]
+        if (!nextStatus) {
+            toast.error('No se puede avanzar este estado')
+            return
+        }
+
+        try {
+            const updateData: any = {
+                status: nextStatus,
+                updated_at: new Date().toISOString()
+            }
+
+            // Set appropriate timestamp
+            const timestampFields: Record<string, string> = {
+                'confirmed': 'confirmed_at',
+                'preparing': 'preparing_at',
+                'ready': 'ready_at',
+                'out_for_delivery': 'delivering_at',
+                'delivering': 'delivering_at',
+                'delivered': 'completed_at',
+            }
+
+            if (timestampFields[nextStatus]) {
+                updateData[timestampFields[nextStatus]] = new Date().toISOString()
+            }
+
+            const { error } = await supabase
+                .from('orders')
+                .update(updateData)
+                .eq('id', orderId)
+
+            if (error) throw error
+            toast.success(`Orden avanzada`)
+        } catch (error: any) {
+            console.error('Error advancing order:', error)
+            toast.error(error.message || 'Error al actualizar orden')
+        }
+    }
+
+    // Reject/cancel order
+    const handleReject = async (orderId: string) => {
+        if (!confirm('¿Cancelar esta orden?')) return
+
+        try {
+            const { error } = await supabase
+                .from('orders')
+                .update({
+                    status: 'cancelled',
+                    cancelled_at: new Date().toISOString()
+                })
+                .eq('id', orderId)
+
+            if (error) throw error
+            toast.success('Orden cancelada')
+        } catch (error: any) {
+            toast.error(error.message || 'Error al cancelar orden')
+        }
+    }
+
+    // AI message (placeholder)
+    const handleAIMessage = (order: Order) => {
+        setAiModalTitle(`💬 Mensaje a ${order.display_name || order.guest_name || 'Cliente'}`)
+        setAiModalOpen(true)
+    }
+
+    // Calculate stats
+    const stats = {
+        active: newOrders.length + activeOrders.length + deliveryOrders.length,
+        kitchen: activeOrders.length,
+        delivery: deliveryOrders.length
+    }
+
+    const textMuted = isDark ? 'text-zinc-400' : 'text-gray-500'
+
+    if (isLoading && newOrders.length === 0 && activeOrders.length === 0) {
+        return (
+            <AdminShell>
+                <div className="flex h-[60vh] items-center justify-center">
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="w-12 h-12 rounded-full border-4 border-red-600 border-t-transparent animate-spin" />
+                        <p className={textMuted}>Cargando órdenes...</p>
+                    </div>
+                </div>
+            </AdminShell>
+        )
+    }
+
     return (
-        <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                <RefreshCw size={24} className="opacity-20" />
+        <AdminShell stats={stats} onRefresh={handleRefresh} isRefreshing={isLoading}>
+            {/* AI Modal */}
+            <AIPlaceholder
+                isOpen={aiModalOpen}
+                onClose={() => setAiModalOpen(false)}
+                title={aiModalTitle}
+            />
+
+            {/* KDS Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 h-[calc(100vh-180px)] min-h-[500px]">
+
+                <KDSColumn
+                    title="Nuevas"
+                    icon={<Bell size={18} />}
+                    count={newOrders.length}
+                    color="blue"
+                    isDark={isDark}
+                >
+                    {newOrders.map(order => (
+                        <OrderCard
+                            key={order.id}
+                            order={order}
+                            onAdvance={handleAdvance}
+                            onReject={handleReject}
+                            onAIMessage={handleAIMessage}
+                            isDark={isDark}
+                        />
+                    ))}
+                </KDSColumn>
+
+                <KDSColumn
+                    title="En Cocina"
+                    icon={<ChefHat size={18} />}
+                    count={activeOrders.length}
+                    color="orange"
+                    isDark={isDark}
+                >
+                    {activeOrders.map(order => (
+                        <OrderCard
+                            key={order.id}
+                            order={order}
+                            onAdvance={handleAdvance}
+                            onAIMessage={handleAIMessage}
+                            isDark={isDark}
+                        />
+                    ))}
+                </KDSColumn>
+
+                <KDSColumn
+                    title="En Reparto"
+                    icon={<Truck size={18} />}
+                    count={deliveryOrders.length}
+                    color="yellow"
+                    isDark={isDark}
+                >
+                    {deliveryOrders.map(order => (
+                        <OrderCard
+                            key={order.id}
+                            order={order}
+                            onAdvance={handleAdvance}
+                            onAIMessage={handleAIMessage}
+                            isDark={isDark}
+                        />
+                    ))}
+                </KDSColumn>
+
+                <KDSColumn
+                    title="Historial"
+                    icon={<CheckCircle size={18} />}
+                    count={completedOrders.length}
+                    color="green"
+                    isDone
+                    isDark={isDark}
+                >
+                    {completedOrders.slice(0, 10).map(order => (
+                        <OrderCard key={order.id} order={order} isDark={isDark} />
+                    ))}
+                </KDSColumn>
+
             </div>
-            <p>{message}</p>
-        </div>
+        </AdminShell>
     )
 }
